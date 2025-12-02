@@ -287,7 +287,7 @@ public class Main {
                 // Handle transfer
                 handleTransfer(sourceAccount);
             } else {
-                // Handle deposit/withdrawal (existing code)
+                // Handle deposit/withdrawal
                 handleDepositWithdrawal(sourceAccount, transactionType);
             }
 
@@ -303,8 +303,44 @@ public class Main {
 
         String type = (transactionType == 1) ? "DEPOSIT" : "WITHDRAWAL";
         double previousBalance = account.getBalance();
-        double newBalance = (transactionType == 1) ? previousBalance + amount : previousBalance - amount;
 
+        // For withdrawals, validate FIRST before showing confirmation
+        if (transactionType == 2) { // WITHDRAWAL
+            // Check if withdrawal would be valid using a temporary check
+            boolean isValidWithdrawal = true;
+            String errorMessage = "";
+
+            if (account instanceof SavingsAccount) {
+                SavingsAccount savings = (SavingsAccount) account;
+                double newBalance = previousBalance - amount;
+                if (newBalance < savings.getMinimumBalance()) {
+                    isValidWithdrawal = false;
+                    errorMessage = String.format("Withdrawal would violate minimum balance of $%.2f",
+                            savings.getMinimumBalance());
+                }
+            } else if (account instanceof CheckingAccount) {
+                CheckingAccount checking = (CheckingAccount) account;
+                double newBalance = previousBalance - amount;
+                double maxNegative = -checking.getOverdraftLimit();
+                if (newBalance < maxNegative) {
+                    isValidWithdrawal = false;
+                    errorMessage = String.format("Withdrawal would exceed overdraft limit of $%.2f",
+                            checking.getOverdraftLimit());
+                }
+            }
+
+            // If withdrawal is invalid, show error and return immediately
+            if (!isValidWithdrawal) {
+                CustomUtils.printError("Withdrawal not allowed!");
+                CustomUtils.printError(errorMessage);
+                CustomUtils.print(String.format("Current balance: $%.2f", previousBalance));
+                CustomUtils.print(String.format("Requested: $%.2f", amount));
+                return; // Exit without showing confirmation
+            }
+        }
+
+        // Only show confirmation for valid transactions
+        double newBalance = (transactionType == 1) ? previousBalance + amount : previousBalance - amount;
         displayTransactionConfirmation(account.getAccountNumber(), type, amount, previousBalance, newBalance);
 
         String confirm = InputValidator.getValidInput(scanner,
@@ -322,7 +358,7 @@ public class Main {
                 CustomUtils.printSuccess("Transaction completed successfully!");
                 CustomUtils.print("New Balance: $" + String.format("%.2f", account.getBalance()));
             } else {
-                CustomUtils.printError("Transaction failed!");
+                CustomUtils.printError("Transaction failed unexpectedly!");
             }
         } else {
             CustomUtils.print("Transaction cancelled.");
