@@ -24,7 +24,7 @@ public class AccountUI {
 
         do {
             displayAccountMenu();
-            System.out.print("Enter choice: ");
+            CustomUtils.printInline("Enter choice: ");
 
             try {
                 accountChoice = scanner.nextInt();
@@ -40,7 +40,7 @@ public class AccountUI {
                 }
 
                 if (accountChoice != 5) {
-                    System.out.print("\nPress Enter to continue...");
+                    CustomUtils.printInline("\nPress Enter to continue...");
                     scanner.nextLine();
                 }
 
@@ -56,12 +56,12 @@ public class AccountUI {
     private void displayAccountMenu() {
         int width = 50;
         CustomUtils.print();
-        System.out.print("┌"); for (int i = 0; i < width; i++) System.out.print("─"); CustomUtils.print("┐");
+        CustomUtils.printInline("┌"); for (int i = 0; i < width; i++) CustomUtils.printInline("─"); CustomUtils.print("┐");
         String title = "ACCOUNT MANAGEMENT";
         int padding = (width - title.length()) / 2;
-        System.out.print("│"); System.out.print(" ".repeat(padding)); System.out.print(title);
-        System.out.print(" ".repeat(width - padding - title.length())); CustomUtils.print("│");
-        System.out.print("└"); for (int i = 0; i < width; i++) System.out.print("─"); CustomUtils.print("┘");
+        CustomUtils.printInline("│"); CustomUtils.printInline(" ".repeat(padding)); CustomUtils.printInline(title);
+        CustomUtils.printInline(" ".repeat(width - padding - title.length())); CustomUtils.print("│");
+        CustomUtils.printInline("└"); for (int i = 0; i < width; i++) CustomUtils.printInline("─"); CustomUtils.print("┘");
         CustomUtils.print("\n1. View All Accounts");
         CustomUtils.print("2. View Account Details");
         CustomUtils.print("3. Search Account");
@@ -79,7 +79,7 @@ public class AccountUI {
         CustomUtils.print("VIEW ACCOUNT DETAILS");
         CustomUtils.print("─".repeat(50));
 
-        System.out.print("Enter Account Number: ");
+        CustomUtils.printInline("Enter Account Number: ");
         String accountNumber = scanner.nextLine();
 
         Account account = accountManager.findAccount(accountNumber);
@@ -100,7 +100,7 @@ public class AccountUI {
         CustomUtils.print("1. Account Number");
         CustomUtils.print("2. Customer Name");
         CustomUtils.print("3. Account Type");
-        System.out.print("Select option (1-3): ");
+        CustomUtils.printInline("Select option (1-3): ");
 
         try {
             int searchOption = scanner.nextInt();
@@ -108,13 +108,13 @@ public class AccountUI {
 
             switch (searchOption) {
                 case 1:
-                    System.out.print("Enter Account Number: ");
+                    CustomUtils.printInline("Enter Account Number: ");
                     String accNumber = scanner.nextLine();
                     searchByAccountNumber(accNumber);
                     break;
 
                 case 2:
-                    System.out.print("Enter Customer Name: ");
+                    CustomUtils.printInline("Enter Customer Name: ");
                     String customerName = scanner.nextLine();
                     searchByCustomerName(customerName);
                     break;
@@ -123,7 +123,7 @@ public class AccountUI {
                     CustomUtils.print("Account Types:");
                     CustomUtils.print("1. Savings");
                     CustomUtils.print("2. Checking");
-                    System.out.print("Select type (1-2): ");
+                    CustomUtils.printInline("Select type (1-2): ");
                     int typeChoice = scanner.nextInt();
                     scanner.nextLine();
 

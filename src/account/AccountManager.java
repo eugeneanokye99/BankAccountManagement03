@@ -1,5 +1,7 @@
 package account;
 
+import utils.CustomUtils;
+
 public class AccountManager {
     private Account[] accounts;
     private int accountCount;
@@ -37,26 +39,26 @@ public class AccountManager {
     // Display all accounts
     public void viewAllAccounts() {
         if (accountCount == 0) {
-            System.out.println("No accounts found.");
+            CustomUtils.print("No accounts found.");
             return;
         }
 
         double totalBalance = 0;
-        System.out.println("\n" + "─".repeat(80));
-        System.out.println("ACCOUNT LISTING");
-        System.out.println("─".repeat(80));
+        CustomUtils.print("\n" + "─".repeat(80));
+        CustomUtils.print("ACCOUNT LISTING");
+        CustomUtils.print("─".repeat(80));
 
         for (int i = 0; i < accountCount; i++) {
             Account account = accounts[i];
 
             account.displayAccountDetails();
 
-            System.out.println("─".repeat(80));
+            CustomUtils.print("─".repeat(80));
             totalBalance += account.getBalance();
         }
 
-        System.out.println("Total Accounts: " + accountCount);
-        System.out.println("Total Bank Balance: $" + String.format("%.2f", totalBalance));
+        CustomUtils.print("Total Accounts: " + accountCount);
+        CustomUtils.print("Total Bank Balance: $" + String.format("%.2f", totalBalance));
     }
 
 

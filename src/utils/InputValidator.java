@@ -1,140 +1,147 @@
 package utils;
 
+import exceptions.ValidationException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
 public class InputValidator {
 
-    // Name validation
-    public static boolean isValidName(String name) {
+    // Name validation with exception
+    public static String validateName(String name) throws ValidationException {
         if (name == null || name.trim().isEmpty()) {
-            return false;
+            throw new ValidationException("Name cannot be empty", "name");
         }
 
         String trimmedName = name.trim();
 
         // Check minimum length
         if (trimmedName.length() < 2) {
-            return false;
+            throw new ValidationException("Name must be at least 2 characters", "name");
         }
 
         // Check for numbers
         if (Pattern.compile(".*\\d.*").matcher(trimmedName).matches()) {
-            return false;
+            throw new ValidationException("Name cannot contain numbers", "name");
         }
 
         // Check for only letters and spaces
-        return Pattern.compile("^[a-zA-Z\\s]+$").matcher(trimmedName).matches();
+        if (!Pattern.compile("^[a-zA-Z\\s]+$").matcher(trimmedName).matches()) {
+            throw new ValidationException("Name can only contain letters and spaces", "name");
+        }
+
+        return trimmedName;
     }
 
-    // Age validation
-    public static boolean isValidAge(int age) {
-        return age >= 18 && age <= 120;
-    }
-
-    public static boolean isValidAge(String ageInput) {
+    // Age validation with exception
+    public static int validateAge(String ageInput) throws ValidationException {
         try {
             int age = Integer.parseInt(ageInput.trim());
-            return isValidAge(age);
+
+            if (age < 18) {
+                throw new ValidationException("Customer must be at least 18 years old", "age");
+            }
+
+            if (age > 120) {
+                throw new ValidationException("Please enter a valid age (max 120)", "age");
+            }
+
+            return age;
         } catch (NumberFormatException e) {
-            return false;
+            throw new ValidationException("Age must be a valid number", "age");
         }
     }
 
-    // Contact validation
-    public static boolean isValidContact(String contact) {
+    // Contact validation with exception
+    public static String validateContact(String contact) throws ValidationException {
         if (contact == null || contact.trim().isEmpty()) {
-            return false;
+            throw new ValidationException("Contact information is required", "contact");
         }
 
         String trimmedContact = contact.trim();
 
         // Basic phone validation
         if (!Pattern.compile("^[+]?[\\d\\s\\-\\(\\)]+$").matcher(trimmedContact).matches()) {
-            return false;
+            throw new ValidationException("Please enter a valid contact number", "contact");
         }
 
         // Minimum length check
-        return trimmedContact.length() >= 7;
-    }
-
-    // Address validation
-    public static boolean isValidAddress(String address) {
-        if (address == null || address.trim().isEmpty()) {
-            return false;
+        if (trimmedContact.length() < 7) {
+            throw new ValidationException("Contact number is too short (minimum 7 digits)", "contact");
         }
 
-        return address.trim().length() >= 5;
+        return trimmedContact;
     }
 
-    // Amount validation
-    public static boolean isValidAmount(double amount) {
-        return amount > 0;
+    // Address validation with exception
+    public static String validateAddress(String address) throws ValidationException {
+        if (address == null || address.trim().isEmpty()) {
+            throw new ValidationException("Address is required", "address");
+        }
+
+        String trimmedAddress = address.trim();
+
+        if (trimmedAddress.length() < 5) {
+            throw new ValidationException("Please enter a complete address (minimum 5 characters)", "address");
+        }
+
+        return trimmedAddress;
     }
 
-    public static boolean isValidAmount(String amountInput) {
+    // Amount validation with exception
+    public static double validateAmount(String amountInput) throws ValidationException {
         try {
             double amount = Double.parseDouble(amountInput.trim());
-            return isValidAmount(amount) && isValidDecimalPlaces(amountInput);
+
+            if (amount <= 0) {
+                throw new ValidationException("Amount must be greater than zero", "amount");
+            }
+
+            // Check decimal places (max 2)
+            if (amountInput.contains(".")) {
+                String decimalPart = amountInput.split("\\.")[1];
+                if (decimalPart.length() > 2) {
+                    throw new ValidationException("Amount cannot have more than 2 decimal places", "amount");
+                }
+            }
+
+            return amount;
         } catch (NumberFormatException e) {
-            return false;
+            throw new ValidationException("Please enter a valid amount", "amount");
         }
     }
 
-    // Check decimal places (max 2)
-    public static boolean isValidDecimalPlaces(String amount) {
-        if (!amount.contains(".")) {
-            return true;
-        }
-
-        String decimalPart = amount.split("\\.")[1];
-        return decimalPart.length() <= 2;
-    }
-
-    // Menu choice validation
-    public static boolean isValidChoice(int choice, int min, int max) {
-        return choice >= min && choice <= max;
-    }
-
-    public static boolean isValidChoice(String choiceInput, int min, int max) {
+    // Menu choice validation with exception
+    public static int validateChoice(String choiceInput, int min, int max) throws ValidationException {
         try {
             int choice = Integer.parseInt(choiceInput.trim());
-            return isValidChoice(choice, min, max);
+
+            if (choice < min || choice > max) {
+                throw new ValidationException(
+                        String.format("Please enter a number between %d and %d", min, max),
+                        "choice");
+            }
+
+            return choice;
         } catch (NumberFormatException e) {
-            return false;
+            throw new ValidationException("Please enter a valid number", "choice");
         }
     }
 
-    // Confirmation validation
-    public static boolean isValidConfirmation(String input) {
+    // Confirmation validation with exception
+    public static String validateConfirmation(String input) throws ValidationException {
         if (input == null || input.trim().isEmpty()) {
-            return false;
+            throw new ValidationException("Please enter Y or N", "confirmation");
         }
 
         String trimmed = input.trim().toLowerCase();
-        return trimmed.equals("y") || trimmed.equals("n");
-    }
-
-    // Account number validation (format: ACC001)
-    public static boolean isValidAccountNumber(String accountNumber) {
-        if (accountNumber == null || accountNumber.trim().isEmpty()) {
-            return false;
+        if (!trimmed.equals("y") && !trimmed.equals("n")) {
+            throw new ValidationException("Please enter Y or N", "confirmation");
         }
 
-        return Pattern.compile("^ACC\\d{3}$").matcher(accountNumber.trim()).matches();
+        return trimmed;
     }
 
-    // Email validation (optional)
-    public static boolean isValidEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            return false;
-        }
-
-        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
-        return Pattern.compile(emailRegex).matcher(email.trim()).matches();
-    }
-
-    // Get valid input with prompt and validation
+    // Get valid input with prompt and validation (wrapped version for Main.java)
     public static String getValidInput(Scanner scanner, String prompt, ValidationRule validator, String errorMessage) {
         while (true) {
             CustomUtils.printInline(prompt);
@@ -197,5 +204,64 @@ public class InputValidator {
         public static final ValidationRule ADDRESS_RULE = InputValidator::isValidAddress;
         public static final ValidationRule AMOUNT_RULE = InputValidator::isValidAmount;
         public static final ValidationRule ACCOUNT_NUMBER_RULE = InputValidator::isValidAccountNumber;
+    }
+
+    // Helper validation methods
+    public static boolean isValidName(String name) {
+        try {
+            validateName(name);
+            return true;
+        } catch (ValidationException e) {
+            return false;
+        }
+    }
+
+    public static boolean isValidAge(String ageInput) {
+        try {
+            validateAge(ageInput);
+            return true;
+        } catch (ValidationException e) {
+            return false;
+        }
+    }
+
+    public static boolean isValidContact(String contact) {
+        try {
+            validateContact(contact);
+            return true;
+        } catch (ValidationException e) {
+            return false;
+        }
+    }
+
+    public static boolean isValidAddress(String address) {
+        try {
+            validateAddress(address);
+            return true;
+        } catch (ValidationException e) {
+            return false;
+        }
+    }
+
+    public static boolean isValidAmount(String amountInput) {
+        try {
+            validateAmount(amountInput);
+            return true;
+        } catch (ValidationException e) {
+            return false;
+        }
+    }
+
+    public static boolean isValidConfirmation(String input) {
+        try {
+            validateConfirmation(input);
+            return true;
+        } catch (ValidationException e) {
+            return false;
+        }
+    }
+
+    public static boolean isValidAccountNumber(String accountNumber) {
+        return accountNumber != null && Pattern.compile("^ACC\\d{3}$").matcher(accountNumber.trim()).matches();
     }
 }

@@ -1,6 +1,7 @@
-package manager;
+package transaction;
 
-import transaction.Transaction;
+import utils.CustomUtils;
+
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -19,13 +20,11 @@ public class TransactionManager {
     }
 
     // Add transaction to array
-    public boolean addTransaction(Transaction transaction) {
+    public void addTransaction(Transaction transaction) {
         if (transactionCount < transactions.length) {
             transactions[transactionCount] = transaction;
             transactionCount++;
-            return true;
         }
-        return false; // Array is full
     }
 
     // View transactions for a specific account (newest first)
@@ -33,7 +32,7 @@ public class TransactionManager {
         Transaction[] accountTransactions = getTransactionsForAccount(accountNumber);
 
         if (accountTransactions.length == 0) {
-            System.out.println("No transactions found for account: " + accountNumber);
+            CustomUtils.print("No transactions found for account: " + accountNumber);
             return;
         }
 
@@ -45,16 +44,16 @@ public class TransactionManager {
             }
         });
 
-        System.out.println("\n" + "─".repeat(90));
-        System.out.println("TRANSACTION HISTORY - Account: " + accountNumber);
-        System.out.println("─".repeat(90));
+        CustomUtils.print("\n" + "─".repeat(90));
+        CustomUtils.print("TRANSACTION HISTORY - Account: " + accountNumber);
+        CustomUtils.print("─".repeat(90));
 
-        System.out.printf("%-10s %-12s %-10s %-12s %-15s %-20s%n",
+        CustomUtils.printf("%-10s %-12s %-10s %-12s %-15s %-20s%n",
                 "ID", "Account", "Type", "Amount", "Balance After", "Timestamp");
-        System.out.println("─".repeat(90));
+        CustomUtils.print("─".repeat(90));
 
         for (Transaction transaction : accountTransactions) {
-            System.out.printf("%-10s %-12s %-10s $%-11.2f $%-14.2f %-20s%n",
+            CustomUtils.printf("%-10s %-12s %-10s $%-11.2f $%-14.2f %-20s%n",
                     transaction.getTransactionId(),
                     transaction.getAccountNumber(),
                     transaction.getType(),
@@ -64,14 +63,14 @@ public class TransactionManager {
         }
 
         // Display summary
-        System.out.println("─".repeat(90));
+        CustomUtils.print("─".repeat(90));
         double totalDeposits = calculateTotalDeposits(accountNumber);
         double totalWithdrawals = calculateTotalWithdrawals(accountNumber);
         double netChange = totalDeposits - totalWithdrawals;
 
-        System.out.printf("Summary: Total Deposits: $%.2f | Total Withdrawals: $%.2f | Net Change: $%.2f%n",
+        CustomUtils.printf("Summary: Total Deposits: $%.2f | Total Withdrawals: $%.2f | Net Change: $%.2f%n",
                 totalDeposits, totalWithdrawals, netChange);
-        System.out.println("Total Transactions: " + accountTransactions.length);
+        CustomUtils.print("Total Transactions: " + accountTransactions.length);
     }
 
     // Calculate total deposits for an account
@@ -99,11 +98,7 @@ public class TransactionManager {
         }
         return total;
     }
-
-    // Get transaction count
-    public int getTransactionCount() {
-        return transactionCount;
-    }
+    
 
     // Helper method to get transactions for a specific account
     private Transaction[] getTransactionsForAccount(String accountNumber) {

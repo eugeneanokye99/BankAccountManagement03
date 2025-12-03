@@ -1,5 +1,7 @@
 package transaction;
 
+import utils.CustomUtils;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -73,29 +75,5 @@ public class Transaction {
         return transactionCounter;
     }
 
-    public String getRelatedAccount() {
-        return relatedAccount;
-    }
 
-    public void setRelatedAccount(String relatedAccount) {
-        this.relatedAccount = relatedAccount;
-    }
-
-    public void displayTransactionDetails() {
-        System.out.println("Transaction ID: " + transactionId);
-        System.out.println("Account: " + accountNumber);
-        System.out.println("Type: " + type);
-        if (relatedAccount != null && (type.equals("TRANSFER_OUT") || type.equals("TRANSFER_IN"))) {
-            System.out.println("Related Account: " + relatedAccount);
-        }
-        System.out.println("Amount: $" + String.format("%.2f", amount));
-        System.out.println("Balance After: $" + String.format("%.2f", balanceAfter));
-        System.out.println("Date/Time: " + timestamp);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s | %s | %s | $%.2f | $%.2f | %s",
-                transactionId, accountNumber, type, amount, balanceAfter, timestamp);
-    }
 }

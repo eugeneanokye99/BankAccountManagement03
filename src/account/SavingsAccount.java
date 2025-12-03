@@ -1,6 +1,7 @@
 package account;
 
 import customer.Customer;
+import utils.CustomUtils;
 
 public class SavingsAccount extends Account {
     private final double interestRate;
@@ -37,7 +38,7 @@ public class SavingsAccount extends Account {
     @Override
     public boolean withdraw(double amount) {
         if (amount <= 0) {
-            System.out.println("Withdrawal amount must be positive");
+            CustomUtils.print("Withdrawal amount must be positive");
             return false;
         }
 
@@ -58,14 +59,14 @@ public class SavingsAccount extends Account {
     // Implement abstract methods
     @Override
     public void displayAccountDetails() {
-        System.out.println("=== Savings Account Details ===");
-        System.out.println("Account Number: " + getAccountNumber());
-        System.out.println("Customer: " + getCustomer().getName());
-        System.out.println("Balance: $" + String.format("%.2f", getBalance()));
-        System.out.println("Interest Rate: " + interestRate + "%");
-        System.out.println("Minimum Balance: $" + String.format("%.2f", minimumBalance));
-        System.out.println("Status: " + getStatus());
-        System.out.println("Interest Earned: $" + String.format("%.2f", calculateInterest()));
+        CustomUtils.print("=== Savings Account Details ===");
+        CustomUtils.print("Account Number: " + getAccountNumber());
+        CustomUtils.print("Customer: " + getCustomer().getName());
+        CustomUtils.print("Balance: $" + String.format("%.2f", getBalance()));
+        CustomUtils.print("Interest Rate: " + interestRate + "%");
+        CustomUtils.print("Minimum Balance: $" + String.format("%.2f", minimumBalance));
+        CustomUtils.print("Status: " + getStatus());
+        CustomUtils.print("Interest Earned: $" + String.format("%.2f", calculateInterest()));
     }
 
     @Override

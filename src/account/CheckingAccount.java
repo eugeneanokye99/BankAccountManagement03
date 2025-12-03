@@ -1,6 +1,7 @@
 package account;
 
 import customer.Customer;
+import utils.CustomUtils;
 
 public class CheckingAccount extends Account {
     private final double overdraftLimit;
@@ -25,7 +26,7 @@ public class CheckingAccount extends Account {
     @Override
     public boolean withdraw(double amount) {
         if (amount <= 0) {
-            System.out.println("Withdrawal amount must be positive");
+            CustomUtils.print("Withdrawal amount must be positive");
             return false;
         }
 
@@ -33,8 +34,8 @@ public class CheckingAccount extends Account {
 
         // Check if withdrawal exceeds overdraft limit
         if (amount > maxWithdrawal) {
-            System.out.printf("Withdrawal denied. Exceeds overdraft limit of $%.2f.%n", overdraftLimit);
-            System.out.printf("Current balance: $%.2f, Maximum withdrawal: $%.2f%n", getBalance(), maxWithdrawal);
+            CustomUtils.printf("Withdrawal denied. Exceeds overdraft limit of $%.2f.%n", overdraftLimit);
+            CustomUtils.printf("Current balance: $%.2f, Maximum withdrawal: $%.2f%n", getBalance(), maxWithdrawal);
             return false;
         }
 
@@ -43,7 +44,7 @@ public class CheckingAccount extends Account {
         setBalance(newBalance);
 
         if (newBalance < 0) {
-            System.out.printf("Overdraft used. Negative balance: $%.2f%n", newBalance);
+            CustomUtils.printf("Overdraft used. Negative balance: $%.2f%n", newBalance);
         }
 
         return true;
@@ -52,18 +53,18 @@ public class CheckingAccount extends Account {
     // Implement abstract methods
     @Override
     public void displayAccountDetails() {
-        System.out.println("=== Checking Account Details ===");
-        System.out.println("Account Number: " + getAccountNumber());
-        System.out.println("Customer: " + getCustomer().getName());
-        System.out.println("Customer Type: " + getCustomer().getCustomerType());
-        System.out.println("Balance: $" + String.format("%.2f", getBalance()));
-        System.out.println("Overdraft Limit: $" + String.format("%.2f", overdraftLimit));
-        System.out.println("Monthly Fee: $" + String.format("%.2f", monthlyFee));
-        System.out.println("Status: " + getStatus());
+        CustomUtils.print("=== Checking Account Details ===");
+        CustomUtils.print("Account Number: " + getAccountNumber());
+        CustomUtils.print("Customer: " + getCustomer().getName());
+        CustomUtils.print("Customer Type: " + getCustomer().getCustomerType());
+        CustomUtils.print("Balance: $" + String.format("%.2f", getBalance()));
+        CustomUtils.print("Overdraft Limit: $" + String.format("%.2f", overdraftLimit));
+        CustomUtils.print("Monthly Fee: $" + String.format("%.2f", monthlyFee));
+        CustomUtils.print("Status: " + getStatus());
 
         // Show fee waiver info for premium customers
         if (getCustomer().getCustomerType().equals("Premium")) {
-            System.out.println("Monthly Fee Status: WAIVED (Premium Customer)");
+            CustomUtils.print("Monthly Fee Status: WAIVED (Premium Customer)");
         }
     }
 

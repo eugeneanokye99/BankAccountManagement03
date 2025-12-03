@@ -7,7 +7,7 @@ import account.Account;
 import account.SavingsAccount;
 import account.CheckingAccount;
 import account.AccountManager;
-import manager.TransactionManager;
+import transaction.TransactionManager;
 import transaction.Transaction;
 import ui.AccountUI;
 import ui.CustomerUI;
@@ -349,16 +349,20 @@ public class Main {
                 "Please enter Y or N");
 
         if (confirm.equalsIgnoreCase("Y")) {
-            boolean success = account.processTransaction(amount, type);
-            if (success) {
-                // Create and record transaction
-                Transaction transaction = new Transaction(account.getAccountNumber(), type, amount, account.getBalance());
-                transactionManager.addTransaction(transaction);
+            try {  // ADD TRY-CATCH HERE
+                boolean success = account.processTransaction(amount, type);
+                if (success) {
+                    // Create and record transaction
+                    Transaction transaction = new Transaction(account.getAccountNumber(), type, amount, account.getBalance());
+                    transactionManager.addTransaction(transaction);
 
-                CustomUtils.printSuccess("Transaction completed successfully!");
-                CustomUtils.print("New Balance: $" + String.format("%.2f", account.getBalance()));
-            } else {
-                CustomUtils.printError("Transaction failed unexpectedly!");
+                    CustomUtils.printSuccess("Transaction completed successfully!");
+                    CustomUtils.print("New Balance: $" + String.format("%.2f", account.getBalance()));
+                } else {
+                    CustomUtils.printError("Transaction failed unexpectedly!");
+                }
+            } catch (IllegalArgumentException e) {
+                CustomUtils.printError("Transaction Error: " + e.getMessage());
             }
         } else {
             CustomUtils.print("Transaction cancelled.");
@@ -399,32 +403,36 @@ public class Main {
                 "Please enter Y or N");
 
         if (confirm.equalsIgnoreCase("Y")) {
-            boolean success = sourceAccount.transfer(targetAccount, amount);
-            if (success) {
-                // Record both transactions (withdrawal from source, deposit to target)
-                Transaction withdrawalTransaction = new Transaction(
-                        sourceAccount.getAccountNumber(),
-                        "TRANSFER_OUT",
-                        amount,
-                        sourceAccount.getBalance()
-                );
-                transactionManager.addTransaction(withdrawalTransaction);
+            try {
+                boolean success = sourceAccount.transfer(targetAccount, amount);
+                if (success) {
+                    // Record both transactions (withdrawal from source, deposit to target)
+                    Transaction withdrawalTransaction = new Transaction(
+                            sourceAccount.getAccountNumber(),
+                            "TRANSFER_OUT",
+                            amount,
+                            sourceAccount.getBalance()
+                    );
+                    transactionManager.addTransaction(withdrawalTransaction);
 
-                Transaction depositTransaction = new Transaction(
-                        targetAccount.getAccountNumber(),
-                        "TRANSFER_IN",
-                        amount,
-                        targetAccount.getBalance()
-                );
-                transactionManager.addTransaction(depositTransaction);
+                    Transaction depositTransaction = new Transaction(
+                            targetAccount.getAccountNumber(),
+                            "TRANSFER_IN",
+                            amount,
+                            targetAccount.getBalance()
+                    );
+                    transactionManager.addTransaction(depositTransaction);
 
-                CustomUtils.printSuccess("Transfer completed successfully!");
-                CustomUtils.print("\nSource Account:");
-                CustomUtils.print("New Balance: $" + String.format("%.2f", sourceAccount.getBalance()));
-                CustomUtils.print("\nTarget Account:");
-                CustomUtils.print("New Balance: $" + String.format("%.2f", targetAccount.getBalance()));
-            } else {
-                CustomUtils.printError("Transfer failed!");
+                    CustomUtils.printSuccess("Transfer completed successfully!");
+                    CustomUtils.print("\nSource Account:");
+                    CustomUtils.print("New Balance: $" + String.format("%.2f", sourceAccount.getBalance()));
+                    CustomUtils.print("\nTarget Account:");
+                    CustomUtils.print("New Balance: $" + String.format("%.2f", targetAccount.getBalance()));
+                } else {
+                    CustomUtils.printError("Transfer failed!");
+                }
+            } catch (IllegalArgumentException e) {
+                CustomUtils.printError("Transfer Error: " + e.getMessage());
             }
         } else {
             CustomUtils.print("Transfer cancelled.");

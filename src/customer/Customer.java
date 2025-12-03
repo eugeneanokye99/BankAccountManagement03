@@ -10,13 +10,6 @@ public abstract class Customer {
     private static int customerCounter = 0;
 
     public Customer(String name, int age, String contact, String address) {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Customer name is required.");
-        }
-        if (age < 0) {
-            throw new IllegalArgumentException("Age cannot be negative.");
-        }
-
         this.customerId = generateCustomerId();
         this.name = name;
         this.age = age;

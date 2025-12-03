@@ -1,5 +1,7 @@
 package customer;
 
+import utils.CustomUtils;
+
 public class PremiumCustomer extends Customer {
     private final double minimumBalance;
 
@@ -11,15 +13,15 @@ public class PremiumCustomer extends Customer {
 
     @Override
     public void displayCustomerDetails() {
-        System.out.println("=== Premium Customer Details ===");
-        System.out.println("Customer ID: " + getCustomerId());
-        System.out.println("Name: " + getName());
-        System.out.println("Age: " + getAge());
-        System.out.println("Contact: " + getContact());
-        System.out.println("Address: " + getAddress());
-        System.out.println("Type: Premium Customer");
-        System.out.println("Minimum Balance Required: $" + String.format("%.2f", minimumBalance));
-        System.out.println("Benefits: No monthly fees, Priority service");
+        CustomUtils.print("=== Premium Customer Details ===");
+        CustomUtils.print("Customer ID: " + getCustomerId());
+        CustomUtils.print("Name: " + getName());
+        CustomUtils.print("Age: " + getAge());
+        CustomUtils.print("Contact: " + getContact());
+        CustomUtils.print("Address: " + getAddress());
+        CustomUtils.print("Type: Premium Customer");
+        CustomUtils.print("Minimum Balance Required: $" + String.format("%.2f", minimumBalance));
+        CustomUtils.print("Benefits: No monthly fees, Priority service");
     }
 
     @Override

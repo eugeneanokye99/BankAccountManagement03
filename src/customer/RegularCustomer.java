@@ -1,5 +1,7 @@
 package customer;
 
+import utils.CustomUtils;
+
 public class RegularCustomer extends Customer {
 
     public RegularCustomer(String name, int age, String contact, String address) {
@@ -8,14 +10,14 @@ public class RegularCustomer extends Customer {
 
     @Override
     public void displayCustomerDetails() {
-        System.out.println("=== Regular Customer Details ===");
-        System.out.println("Customer ID: " + getCustomerId());
-        System.out.println("Name: " + getName());
-        System.out.println("Age: " + getAge());
-        System.out.println("Contact: " + getContact());
-        System.out.println("Address: " + getAddress());
-        System.out.println("Type: Regular Customer");
-        System.out.println("Benefits: Standard banking services");
+        CustomUtils.print("=== Regular Customer Details ===");
+        CustomUtils.print("Customer ID: " + getCustomerId());
+        CustomUtils.print("Name: " + getName());
+        CustomUtils.print("Age: " + getAge());
+        CustomUtils.print("Contact: " + getContact());
+        CustomUtils.print("Address: " + getAddress());
+        CustomUtils.print("Type: Regular Customer");
+        CustomUtils.print("Benefits: Standard banking services");
     }
 
     @Override
