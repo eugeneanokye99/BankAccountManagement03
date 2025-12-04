@@ -5,7 +5,9 @@ import account.AccountManager;
 import account.CheckingAccount;
 import account.SavingsAccount;
 import utils.CustomUtils;
+import utils.InputService;
 import utils.InputValidator;
+import exceptions.ValidationException;
 
 import java.time.LocalDate;
 import java.util.Scanner;
@@ -22,6 +24,7 @@ public class AccountManagerUI {
 
     // Main entry point
     public void manageAccounts() {
+        InputService inputService = new InputService(scanner);
         int manageChoice;
 
         do {
@@ -36,7 +39,7 @@ public class AccountManagerUI {
                     case 1: updateAccountStatus(); break;
                     case 2: updateAccountInformation(); break;
                     case 3: return; // Go back
-                    default: CustomUtils.printError("Invalid choice! Please enter 1-6.");
+                    default: CustomUtils.printError("Invalid choice! Please enter 1-3.");
                 }
 
                 if (manageChoice != 3) {
@@ -64,9 +67,9 @@ public class AccountManagerUI {
     // 1. Update Account Status
     private void updateAccountStatus() {
         CustomUtils.printSection("UPDATE ACCOUNT STATUS");
+        InputService inputService = new InputService(scanner);
 
-        CustomUtils.printInline("Enter Account Number: ");
-        String accountNumber = scanner.nextLine();
+        String accountNumber = inputService.getAccountNumber("Enter Account Number: ");
 
         Account account = accountManager.findAccount(accountNumber);
         if (account == null) {
@@ -80,17 +83,16 @@ public class AccountManagerUI {
         CustomUtils.print("2. Inactive");
         CustomUtils.print("3. Closed");
 
-        int statusChoice = InputValidator.getValidInt(scanner,
+        int statusChoice = inputService.getIntInRange(
                 "Select status (1-3): ",
                 1, 3);
 
-        String newStatus;
-        switch (statusChoice) {
-            case 1: newStatus = "Active"; break;
-            case 2: newStatus = "Inactive"; break;
-            case 3: newStatus = "Closed"; break;
-            default: newStatus = "Active";
-        }
+        String newStatus = switch (statusChoice) {
+            case 1 -> "Active";
+            case 2 -> "Inactive";
+            case 3 -> "Closed";
+            default -> "Active";
+        };
 
         // Check if account can be closed (balance should be zero)
         if (newStatus.equals("Closed") && account.getBalance() > 0) {
@@ -98,12 +100,10 @@ public class AccountManagerUI {
             return;
         }
 
-        String confirm = InputValidator.getValidInput(scanner,
-                "Change status from '" + account.getStatus() + "' to '" + newStatus + "'? (Y/N): ",
-                InputValidator::isValidConfirmation,
-                "Please enter Y or N");
+        boolean confirm = inputService.getConfirmation(
+                "Change status from '" + account.getStatus() + "' to '" + newStatus + "'?");
 
-        if (confirm.equalsIgnoreCase("Y")) {
+        if (confirm) {
             account.setStatus(newStatus);
             CustomUtils.printSuccess("Account status updated successfully!");
             CustomUtils.print("New Status: " + account.getStatus());
@@ -115,9 +115,9 @@ public class AccountManagerUI {
     // 2. Update Account Information
     private void updateAccountInformation() {
         CustomUtils.printSection("UPDATE ACCOUNT INFORMATION");
+        InputService inputService = new InputService(scanner);
 
-        CustomUtils.printInline("Enter Account Number: ");
-        String accountNumber = scanner.nextLine();
+        String accountNumber = inputService.getAccountNumber("Enter Account Number: ");
 
         Account account = accountManager.findAccount(accountNumber);
         if (account == null) {
@@ -132,9 +132,10 @@ public class AccountManagerUI {
         }
         CustomUtils.print("3. Cancel");
 
-        int updateChoice = InputValidator.getValidInt(scanner,
-                "Select option (1-3): ",
-                1, 3);
+        int maxOption = (account instanceof CheckingAccount) ? 3 : 2;
+        int updateChoice = inputService.getIntInRange(
+                "Select option (1-" + maxOption + "): ",
+                1, maxOption);
 
         switch (updateChoice) {
             case 1:
@@ -154,12 +155,11 @@ public class AccountManagerUI {
     }
 
     private void updateContactInformation(Account account) {
+        InputService inputService = new InputService(scanner);
+
         CustomUtils.print("\nCurrent Contact: " + account.getCustomer().getContact());
 
-        String newContact = InputValidator.getValidInput(scanner,
-                "Enter new contact information: ",
-                InputValidator.ValidationRules.CONTACT_RULE,
-                "Please enter a valid contact number");
+        String newContact = inputService.getContact();
 
         // Note: This would require adding a setter for contact in Customer class
         CustomUtils.printSuccess("Contact information update functionality requires Customer class modification.");
@@ -167,17 +167,15 @@ public class AccountManagerUI {
     }
 
     private void updateOverdraftLimit(CheckingAccount checkingAccount) {
+        InputService inputService = new InputService(scanner);
+
         CustomUtils.print("\nCurrent Overdraft Limit: $" +
                 String.format("%.2f", checkingAccount.getOverdraftLimit()));
 
-        double newLimit = InputValidator.getValidDouble(scanner,
-                "Enter new overdraft limit ($): ",
-                0.01);
+        double newLimit = inputService.getPositiveDouble("Enter new overdraft limit ($): ");
 
         // Note: This would require adding a setter for overdraftLimit in CheckingAccount
         CustomUtils.printSuccess("Overdraft limit update functionality requires CheckingAccount class modification.");
         CustomUtils.print("New limit would be: $" + String.format("%.2f", newLimit));
     }
-
-
 }

@@ -13,7 +13,7 @@ public class CheckingAccount extends Account {
         this.monthlyFee = 10.0;
     }
 
-    // Getters for Checking-specific properties
+    // Getters
     public double getOverdraftLimit() {
         return overdraftLimit;
     }
@@ -49,7 +49,7 @@ public class CheckingAccount extends Account {
         return true;
     }
 
-    // Implement abstract methods
+
     @Override
     public void displayAccountDetails() {
         CustomUtils.print("=== Checking Account Details ===");
@@ -72,6 +72,5 @@ public class CheckingAccount extends Account {
         return "Checking";
     }
 
-    public void applyMonthlyFee() {
-    }
+
 }

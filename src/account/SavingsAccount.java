@@ -9,8 +9,8 @@ public class SavingsAccount extends Account {
 
     public SavingsAccount(Customer customer, double openingBalance) {
         super(customer, openingBalance);
-        this.interestRate = 3.5; // 3.5% annually as per requirements
-        this.minimumBalance = 500.0; // $500 minimum balance as per requirements
+        this.interestRate = 3.5;
+        this.minimumBalance = 500.0;
 
         // Validate initial deposit meets minimum balance requirement
         if (openingBalance < minimumBalance) {
@@ -20,7 +20,7 @@ public class SavingsAccount extends Account {
         }
     }
 
-    // Getters for Savings-specific properties
+    // Getters
     public double getInterestRate() {
         return interestRate;
     }
@@ -29,7 +29,6 @@ public class SavingsAccount extends Account {
         return minimumBalance;
     }
 
-    // Calculate interest earned
     public double calculateInterest() {
         return getBalance() * (interestRate / 100);
     }
@@ -55,7 +54,7 @@ public class SavingsAccount extends Account {
         return true;
     }
 
-    // Implement abstract methods
+
     @Override
     public void displayAccountDetails() {
         CustomUtils.print("=== Savings Account Details ===");

@@ -7,7 +7,7 @@ public class PremiumCustomer extends Customer {
 
     public PremiumCustomer(String name, int age, String contact, String address) {
         super(name, age, contact, address);
-        this.minimumBalance = 10000.0; // $10,000 minimum for premium status
+        this.minimumBalance = 10000.0;
     }
 
 
