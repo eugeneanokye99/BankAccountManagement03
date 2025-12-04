@@ -36,7 +36,7 @@ public class TransactionManager {
             return;
         }
 
-        // Sort by timestamp in reverse chronological order (newest first)
+        // Sort by timestamp in reverse chronological order
         Arrays.sort(accountTransactions, new Comparator<Transaction>() {
             @Override
             public int compare(Transaction t1, Transaction t2) {

@@ -14,7 +14,6 @@ public class Transaction {
     private final double amount;
     private final double balanceAfter;
     private final String timestamp;
-    private String relatedAccount; //for transfers
 
     public Transaction(String accountNumber, String type, double amount, double balanceAfter) {
         this.transactionId = generateTransactionId();
@@ -33,7 +32,6 @@ public class Transaction {
         this.amount = amount;
         this.balanceAfter = balanceAfter;
         this.timestamp = generateTimestamp();
-        this.relatedAccount = relatedAccount;
     }
 
     private String generateTransactionId() {

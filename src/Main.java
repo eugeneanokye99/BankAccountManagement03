@@ -7,11 +7,13 @@ import account.Account;
 import account.SavingsAccount;
 import account.CheckingAccount;
 import account.AccountManager;
+import exceptions.ValidationException;
 import transaction.TransactionManager;
 import transaction.Transaction;
 import ui.AccountUI;
 import ui.CustomerUI;
 import utils.CustomUtils;
+import utils.InputService;
 import utils.InputValidator;
 
 public class Main {
@@ -20,6 +22,7 @@ public class Main {
     private static Scanner scanner = new Scanner(System.in);
     private static AccountUI accountUI;
     private static CustomerUI customerUI;
+    static InputService inputService = new InputService(scanner);
 
     public static void main(String[] args) {
         // Initialize UI components
@@ -129,37 +132,63 @@ public class Main {
     private static void createAccount() {
         CustomUtils.printSection("ACCOUNT CREATION");
 
-        try {
-            // Get validated name
-            String name = InputValidator.getValidInput(scanner,
-                    "Enter customer name: ",
-                    InputValidator.ValidationRules.NAME_RULE,
-                    "Name must contain only letters and spaces, at least 2 characters, no numbers");
 
-            // Get validated age
-            int age = InputValidator.getValidInt(scanner,
-                    "Enter customer age: ",
-                    18, 120);
+
+        try {
+            // Get validated name using InputService
+            String name = inputService.getName();
+
+            // Get validated age using InputService
+            int age = inputService.getAge();
 
             // Get validated contact
-            String contact = InputValidator.getValidInput(scanner,
+            String contact = inputService.getInputWithValidation(
                     "Enter customer contact (e.g., 0599012817): ",
-                    InputValidator.ValidationRules.CONTACT_RULE,
-                    "Please enter a valid contact number (at least 7 digits)");
+                    input -> {
+                        try {
+                            InputValidator.validateContact(input);
+                        } catch (ValidationException e) {
+                            throw new RuntimeException(e);
+                        }
+                        return input.trim();
+                    }
+            );
 
             // Get validated address
-            String address = InputValidator.getValidInput(scanner,
+            String address = inputService.getInputWithValidation(
                     "Enter customer address: ",
-                    InputValidator.ValidationRules.ADDRESS_RULE,
-                    "Please enter a complete address (at least 5 characters)");
+                    input -> {
+                        try {
+                            InputValidator.validateAddress(input);
+                        } catch (ValidationException e) {
+                            throw new RuntimeException(e);
+                        }
+                        return input.trim();
+                    }
+            );
 
             // Get customer type
             CustomUtils.print("\nCustomer type:");
             CustomUtils.print("1. Regular Customer (Standard banking services)");
             CustomUtils.print("2. Premium Customer (Enhanced benefits, min balance $10,000)");
-            int customerType = InputValidator.getValidInt(scanner,
-                    "Select type (1-2): ",
-                    1, 2);
+
+            int customerType;
+            while (true) {
+                System.out.print("Select type (1-2): ");
+                String input = scanner.nextLine().trim();
+
+                try {
+                    InputValidator.validateNumericString(input, "Customer type");
+                    int type = Integer.parseInt(input);
+                    if (type == 1 || type == 2) {
+                        customerType = type;
+                        break;
+                    }
+                    CustomUtils.printError("Please enter 1 or 2");
+                } catch (ValidationException e) {
+                    CustomUtils.printError("Please enter a valid number (1 or 2)");
+                }
+            }
 
             Customer customer;
             if (customerType == 1) {
@@ -172,21 +201,35 @@ public class Main {
             CustomUtils.print("\nAccount type:");
             CustomUtils.print("1. Savings Account (Interest: 3.5%, Min Balance: $500)");
             CustomUtils.print("2. Checking Account (Overdraft: $1,000, Monthly Fee: $10)");
-            int accountType = InputValidator.getValidInt(scanner,
-                    "Select type (1-2): ",
-                    1, 2);
+
+            int accountType;
+            while (true) {
+                System.out.print("Select type (1-2): ");
+                String input = scanner.nextLine().trim();
+
+                try {
+                    InputValidator.validateNumericString(input, "Account type");
+                    int type = Integer.parseInt(input);
+                    if (type == 1 || type == 2) {
+                        accountType = type;
+                        break;
+                    }
+                    CustomUtils.printError("Please enter 1 or 2");
+                } catch (ValidationException e) {
+                    CustomUtils.printError("Please enter a valid number (1 or 2)");
+                }
+            }
 
             // Get initial deposit with type-specific validation
             double minDeposit = getMinimumDeposit(customerType, accountType);
             String prompt = String.format("Enter initial deposit amount (minimum $%.2f): $", minDeposit);
 
-            double openingBalance;
-            while (true) {
-                openingBalance = InputValidator.getValidDouble(scanner, prompt, minDeposit);
-                if (openingBalance >= minDeposit) {
-                    break;
-                }
+            double openingBalance = inputService.getPositiveAmount();
+
+            // Additional validation for minimum deposit
+            while (openingBalance < minDeposit) {
                 CustomUtils.printError(String.format("Minimum deposit for this account is $%.2f", minDeposit));
+                openingBalance = inputService.getPositiveAmount();
             }
 
             // Create Account
@@ -210,8 +253,9 @@ public class Main {
 
         } catch (Exception e) {
             CustomUtils.printError("Unexpected error creating account: " + e.getMessage());
-        }
+        } 
     }
+
 
     private static double getMinimumDeposit(int customerType, int accountType) {
         if (accountType == 1) {
@@ -279,7 +323,7 @@ public class Main {
             CustomUtils.print("1. Deposit");
             CustomUtils.print("2. Withdrawal");
             CustomUtils.print("3. Transfer");
-            int transactionType = InputValidator.getValidInt(scanner,
+            int transactionType = inputService.getIntInRange(
                     "Select type (1-3): ",
                     1, 3);
 
@@ -297,9 +341,7 @@ public class Main {
     }
 
     private static void handleDepositWithdrawal(Account account, int transactionType) {
-        double amount = InputValidator.getValidDouble(scanner,
-                "Enter amount: $",
-                0.01);
+        double amount = inputService.getPositiveDouble("Enter amount: $");
 
         String type = (transactionType == 1) ? "DEPOSIT" : "WITHDRAWAL";
         double previousBalance = account.getBalance();
@@ -343,13 +385,10 @@ public class Main {
         double newBalance = (transactionType == 1) ? previousBalance + amount : previousBalance - amount;
         displayTransactionConfirmation(account.getAccountNumber(), type, amount, previousBalance, newBalance);
 
-        String confirm = InputValidator.getValidInput(scanner,
-                "\nConfirm transaction? (Y/N): ",
-                InputValidator::isValidConfirmation,
-                "Please enter Y or N");
+        boolean confirmed = inputService.getConfirmation("\nConfirm transaction?");
 
-        if (confirm.equalsIgnoreCase("Y")) {
-            try {  // ADD TRY-CATCH HERE
+        if (confirmed) {
+            try {
                 boolean success = account.processTransaction(amount, type);
                 if (success) {
                     // Create and record transaction
@@ -390,19 +429,14 @@ public class Main {
         CustomUtils.print("Account Type: " + targetAccount.getAccountType());
         CustomUtils.print("Current Balance: $" + String.format("%.2f", targetAccount.getBalance()));
 
-        double amount = InputValidator.getValidDouble(scanner,
-                "Enter transfer amount: $",
-                0.01);
+        double amount = inputService.getPositiveDouble("Enter amount: $");
 
         // Display transfer confirmation
         displayTransferConfirmation(sourceAccount, targetAccount, amount);
 
-        String confirm = InputValidator.getValidInput(scanner,
-                "\nConfirm transfer? (Y/N): ",
-                InputValidator::isValidConfirmation,
-                "Please enter Y or N");
+        boolean confirmed = inputService.getConfirmation("\nConfirm transaction?");
 
-        if (confirm.equalsIgnoreCase("Y")) {
+        if (confirmed) {
             try {
                 boolean success = sourceAccount.transfer(targetAccount, amount);
                 if (success) {
