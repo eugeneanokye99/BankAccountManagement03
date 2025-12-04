@@ -16,6 +16,7 @@ import utils.CustomUtils;
 import utils.InputService;
 import utils.InputValidator;
 
+
 public class Main {
     private static AccountManager accountManager = new AccountManager();
     private static TransactionManager transactionManager = new TransactionManager();
@@ -67,7 +68,10 @@ public class Main {
     }
 
     private static void runTest() {
+        System.out.println("\nRunning tests...\n");
+        test.AccountTest.runAllTests();
     }
+
 
     private static void generateAccountStatement() {
         CustomUtils.printSection("GENERATE ACCOUNT STATEMENT");

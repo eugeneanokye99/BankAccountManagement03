@@ -1,15 +1,15 @@
+
 import account.Account;
 import account.CheckingAccount;
 import account.SavingsAccount;
 import customer.Customer;
-import customer.PremiumCustomer;
 import customer.RegularCustomer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AccountTest {
+public class AccountTest {
     private Customer regularCustomer;
     private CheckingAccount checkingAccount;
     private SavingsAccount savingsAccount;
