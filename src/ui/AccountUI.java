@@ -2,6 +2,8 @@ package ui;
 
 import account.Account;
 import account.AccountManager;
+
+import java.util.List;
 import java.util.Scanner;
 
 import  ui.AccountManagerUI;
@@ -151,54 +153,42 @@ public class AccountUI {
     }
 
     private void searchByCustomerName(String customerName) {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
+        List<Account> results = accountManager.searchByCustomerName(customerName);
 
         CustomUtils.print("\nSearch Results for: " + customerName);
         CustomUtils.print("─".repeat(80));
 
-        boolean found = false;
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getCustomer().getName().toLowerCase()
-                    .contains(customerName.toLowerCase())) {
-                accounts[i].displayAccountDetails();
-                CustomUtils.print("─".repeat(40));
-                found = true;
-            }
-        }
-
-        if (!found) {
+        if (results.isEmpty()) {
             CustomUtils.print("No accounts found for customer: " + customerName);
+        } else {
+            for (Account account : results) {
+                account.displayAccountDetails();
+                CustomUtils.print("─".repeat(40));
+            }
+            CustomUtils.print("Found " + results.size() + " account(s)");
         }
     }
 
     private void searchByAccountType(String accountType) {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
+        List<Account> results = accountManager.searchByAccountType(accountType);
 
         CustomUtils.print("\n" + accountType + " Accounts:");
         CustomUtils.print("─".repeat(80));
 
-        int count = 0;
-        double totalBalance = 0;
-
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getAccountType().equals(accountType)) {
-                accounts[i].displayAccountDetails();
-                CustomUtils.print("─".repeat(40));
-                count++;
-                totalBalance += accounts[i].getBalance();
-            }
-        }
-
-        if (count == 0) {
+        if (results.isEmpty()) {
             CustomUtils.print("No " + accountType + " accounts found.");
         } else {
+            double totalBalance = accountManager.getTotalBalanceByAccountType(accountType);
+
+            for (Account account : results) {
+                account.displayAccountDetails();
+                CustomUtils.print("─".repeat(40));
+            }
+
             CustomUtils.print("─".repeat(80));
-            CustomUtils.print("Total " + accountType + " Accounts: " + count);
+            CustomUtils.print("Total " + accountType + " Accounts: " + results.size());
             CustomUtils.print("Total Balance: $" + String.format("%.2f", totalBalance));
         }
     }
-
 
 }

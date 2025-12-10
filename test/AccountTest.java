@@ -4,6 +4,7 @@ import account.CheckingAccount;
 import account.SavingsAccount;
 import customer.Customer;
 import customer.RegularCustomer;
+import exceptions.OverdraftExceededException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -54,7 +55,7 @@ public class AccountTest {
     }
 
     @Test
-    void overdraftWithinLimitAllowed() {
+    void overdraftWithinLimitAllowed() throws OverdraftExceededException {
         double withdrawalAmount = 1500.0;
         double initialBalance = checkingAccount.getBalance();
 
@@ -78,10 +79,10 @@ public class AccountTest {
         double initialBalance = checkingAccount.getBalance();
 
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        OverdraftExceededException exception = assertThrows(
+                OverdraftExceededException.class,
                 () -> checkingAccount.withdraw(withdrawalAmount),
-                "Withdrawing beyond overdraft limit should throw IllegalArgumentException"
+                "Withdrawing beyond overdraft limit should throw OverdraftExceededException"
         );
 
 

@@ -1,6 +1,7 @@
 package account;
 
 import customer.Customer;
+import exceptions.OverdraftExceededException;
 import transaction.Transactable;
 import utils.CustomUtils;
 import exceptions.InsufficientFundsException;
@@ -46,7 +47,7 @@ public abstract class Account implements Transactable {
         balance += amount;
     }
 
-    public boolean withdraw(double amount) {
+    public boolean withdraw(double amount) throws OverdraftExceededException {
         if (amount <= 0) {
             throw new IllegalArgumentException("Withdrawal amount must be positive");
         }
@@ -57,6 +58,7 @@ public abstract class Account implements Transactable {
         return true;
     }
 
+    @Override
     public boolean transfer(Account targetAccount, double amount) {
         if (targetAccount == null) {
             throw new IllegalArgumentException("Target account cannot be null");
@@ -70,10 +72,6 @@ public abstract class Account implements Transactable {
             throw new IllegalArgumentException("Transfer amount must be positive");
         }
 
-        // Check if source account has sufficient funds
-        if (amount > this.balance) {
-            throw new InsufficientFundsException(accountNumber, balance, amount);
-        }
 
         try {
             // Withdraw from source account
@@ -92,18 +90,14 @@ public abstract class Account implements Transactable {
     }
 
     @Override
-    public boolean processTransaction(double amount, String type) {
-        try {
-            if (type.equalsIgnoreCase("DEPOSIT")) {
-                deposit(amount);
-                return true;
-            } else if (type.equalsIgnoreCase("WITHDRAWAL")) {
-                return withdraw(amount);
-            }
-            throw new IllegalArgumentException("Invalid transaction type: " + type);
-        } catch (IllegalArgumentException e) {
-            throw e;
+    public boolean processTransaction(double amount, String type) throws OverdraftExceededException {
+        if (type.equalsIgnoreCase("DEPOSIT")) {
+            deposit(amount);
+            return true;
+        } else if (type.equalsIgnoreCase("WITHDRAWAL")) {
+            return withdraw(amount);
         }
+        throw new IllegalArgumentException("Invalid transaction type: " + type);
     }
 
 }
