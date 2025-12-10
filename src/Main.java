@@ -86,8 +86,7 @@ public class Main {
         // Display the statement
         CustomUtils.print(statement);
 
-        // Success message (matches screenshot line 15)
-        CustomUtils.printSuccess("✓ Statement generated successfully!");
+        CustomUtils.printSuccess("Statement generated successfully!");
     }
 
     private static void displayMainMenu() {

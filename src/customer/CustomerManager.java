@@ -2,9 +2,7 @@ package customer;
 
 import account.Account;
 import account.AccountManager;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CustomerManager {
     private AccountManager accountManager;
@@ -15,14 +13,12 @@ public class CustomerManager {
 
     // Get all unique customers
     public List<Customer> getAllCustomers() {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
-
-        HashSet<String> processedCustomerIds = new HashSet<>();
+        List<Account> accounts = accountManager.getAccounts();
+        Set<String> processedCustomerIds = new HashSet<>();
         List<Customer> customers = new ArrayList<>();
 
-        for (int i = 0; i < accountCount; i++) {
-            Customer customer = accounts[i].getCustomer();
+        for (Account account : accounts) {
+            Customer customer = account.getCustomer();
             String customerId = customer.getCustomerId();
 
             if (!processedCustomerIds.contains(customerId)) {
@@ -36,11 +32,10 @@ public class CustomerManager {
 
     // Get customer by ID
     public Customer getCustomerById(String customerId) {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
+        List<Account> accounts = accountManager.getAccounts();
 
-        for (int i = 0; i < accountCount; i++) {
-            Customer customer = accounts[i].getCustomer();
+        for (Account account : accounts) {
+            Customer customer = account.getCustomer();
             if (customer.getCustomerId().equals(customerId)) {
                 return customer;
             }
@@ -53,9 +48,10 @@ public class CustomerManager {
     public List<Customer> searchCustomersByName(String name) {
         List<Customer> allCustomers = getAllCustomers();
         List<Customer> results = new ArrayList<>();
+        String searchName = name.toLowerCase();
 
         for (Customer customer : allCustomers) {
-            if (customer.getName().toLowerCase().contains(name.toLowerCase())) {
+            if (customer.getName().toLowerCase().contains(searchName)) {
                 results.add(customer);
             }
         }
@@ -79,14 +75,12 @@ public class CustomerManager {
 
     // Get all accounts for a customer
     public List<Account> getAccountsForCustomer(String customerId) {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
+        List<Account> allAccounts = accountManager.getAccounts();
         List<Account> customerAccounts = new ArrayList<>();
 
-        for (int i = 0; i < accountCount; i++) {
-            Customer customer = accounts[i].getCustomer();
-            if (customer.getCustomerId().equals(customerId)) {
-                customerAccounts.add(accounts[i]);
+        for (Account account : allAccounts) {
+            if (account.getCustomer().getCustomerId().equals(customerId)) {
+                customerAccounts.add(account);
             }
         }
 
@@ -137,6 +131,138 @@ public class CustomerManager {
     // Check if customer exists
     public boolean customerExists(String customerId) {
         return getCustomerById(customerId) != null;
+    }
+
+    // Get customers with multiple accounts
+    public List<Customer> getCustomersWithMultipleAccounts(int minAccounts) {
+        List<Customer> allCustomers = getAllCustomers();
+        List<Customer> results = new ArrayList<>();
+
+        for (Customer customer : allCustomers) {
+            if (getAccountCountForCustomer(customer.getCustomerId()) >= minAccounts) {
+                results.add(customer);
+            }
+        }
+
+        return results;
+    }
+
+    // Get customers with high total balance
+    public List<Customer> getCustomersWithHighBalance(double minBalance) {
+        List<Customer> allCustomers = getAllCustomers();
+        List<Customer> results = new ArrayList<>();
+
+        for (Customer customer : allCustomers) {
+            if (getTotalBalanceForCustomer(customer.getCustomerId()) >= minBalance) {
+                results.add(customer);
+            }
+        }
+
+        return results;
+    }
+
+    // Get customer by contact number
+    public Customer getCustomerByContact(String contact) {
+        List<Account> accounts = accountManager.getAccounts();
+
+        for (Account account : accounts) {
+            Customer customer = account.getCustomer();
+            if (customer.getContact().equals(contact)) {
+                return customer;
+            }
+        }
+
+        return null;
+    }
+
+    // Get customers in age range
+    public List<Customer> getCustomersInAgeRange(int minAge, int maxAge) {
+        List<Customer> allCustomers = getAllCustomers();
+        List<Customer> results = new ArrayList<>();
+
+        for (Customer customer : allCustomers) {
+            int age = customer.getAge();
+            if (age >= minAge && age <= maxAge) {
+                results.add(customer);
+            }
+        }
+
+        return results;
+    }
+
+    // Get customers by location (partial address match)
+    public List<Customer> getCustomersByLocation(String location) {
+        List<Customer> allCustomers = getAllCustomers();
+        List<Customer> results = new ArrayList<>();
+        String searchLocation = location.toLowerCase();
+
+        for (Customer customer : allCustomers) {
+            if (customer.getAddress().toLowerCase().contains(searchLocation)) {
+                results.add(customer);
+            }
+        }
+
+        return results;
+    }
+
+    // Get average age of customers
+    public double getAverageCustomerAge() {
+        List<Customer> allCustomers = getAllCustomers();
+
+        if (allCustomers.isEmpty()) {
+            return 0.0;
+        }
+
+        int totalAge = 0;
+        for (Customer customer : allCustomers) {
+            totalAge += customer.getAge();
+        }
+
+        return (double) totalAge / allCustomers.size();
+    }
+
+    // Get customer with most accounts
+    public Customer getCustomerWithMostAccounts() {
+        List<Customer> allCustomers = getAllCustomers();
+
+        if (allCustomers.isEmpty()) {
+            return null;
+        }
+
+        Customer customerWithMostAccounts = allCustomers.get(0);
+        int maxAccounts = getAccountCountForCustomer(customerWithMostAccounts.getCustomerId());
+
+        for (Customer customer : allCustomers) {
+            int accountCount = getAccountCountForCustomer(customer.getCustomerId());
+            if (accountCount > maxAccounts) {
+                maxAccounts = accountCount;
+                customerWithMostAccounts = customer;
+            }
+        }
+
+        return customerWithMostAccounts;
+    }
+
+    // Get customer with the highest total balance
+    public Customer getCustomerWithHighestBalance() {
+        List<Customer> allCustomers = getAllCustomers();
+
+        if (allCustomers.isEmpty()) {
+            return null;
+        }
+
+        Customer richestCustomer = allCustomers.get(0);
+        double maxBalance = getTotalBalanceForCustomer(richestCustomer.getCustomerId());
+
+        for (Customer customer : allCustomers) {
+            double balance = getTotalBalanceForCustomer(customer.getCustomerId());
+            if (balance > maxBalance) {
+                maxBalance = balance;
+                richestCustomer = customer;
+            }
+        }
+
+        return richestCustomer;
     }
 
     // Inner class for statistics
