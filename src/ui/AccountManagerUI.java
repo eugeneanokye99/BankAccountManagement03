@@ -161,7 +161,6 @@ public class AccountManagerUI {
 
         String newContact = inputService.getContact();
 
-        // Note: This would require adding a setter for contact in Customer class
         CustomUtils.printSuccess("Contact information update functionality requires Customer class modification.");
         CustomUtils.print("New contact would be: " + newContact);
     }
@@ -174,7 +173,6 @@ public class AccountManagerUI {
 
         double newLimit = inputService.getPositiveDouble("Enter new overdraft limit ($): ");
 
-        // Note: This would require adding a setter for overdraftLimit in CheckingAccount
         CustomUtils.printSuccess("Overdraft limit update functionality requires CheckingAccount class modification.");
         CustomUtils.print("New limit would be: $" + String.format("%.2f", newLimit));
     }

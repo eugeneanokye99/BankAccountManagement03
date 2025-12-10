@@ -1,18 +1,20 @@
 package ui;
 
 import customer.Customer;
+import customer.CustomerManager;
 import account.Account;
 import account.AccountManager;
 import java.util.Scanner;
-import java.util.HashSet;
-import java.util.ArrayList;
+import java.util.List;
 
 public class CustomerUI {
     private AccountManager accountManager;
+    private CustomerManager customerManager;
     private Scanner scanner;
 
     public CustomerUI(AccountManager accountManager, Scanner scanner) {
         this.accountManager = accountManager;
+        this.customerManager = new CustomerManager(accountManager);
         this.scanner = scanner;
     }
 
@@ -32,11 +34,12 @@ public class CustomerUI {
                     case 1: viewAllCustomers(); break;
                     case 2: viewCustomerDetails(); break;
                     case 3: searchCustomers(); break;
-                    case 4: return; // Go back to main menu
-                    default: System.out.println("Invalid choice! Please enter 1-4.");
+                    case 4: viewCustomerStatistics(); break;
+                    case 5: return; // Go back to main menu
+                    default: System.out.println("Invalid choice! Please enter 1-5.");
                 }
 
-                if (customerChoice != 4) {
+                if (customerChoice != 5) {
                     System.out.print("\nPress Enter to continue...");
                     scanner.nextLine();
                 }
@@ -47,7 +50,7 @@ public class CustomerUI {
                 customerChoice = 0;
             }
 
-        } while (customerChoice != 4);
+        } while (customerChoice != 5);
     }
 
     private void displayCustomerMenu() {
@@ -62,15 +65,15 @@ public class CustomerUI {
         System.out.println("\n1. View All Customers");
         System.out.println("2. View Customer Details");
         System.out.println("3. Search Customers");
-        System.out.println("4. Back to Main Menu");
+        System.out.println("4. View Customer Statistics");
+        System.out.println("5. Back to Main Menu");
         System.out.println();
     }
 
     public void viewAllCustomers() {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
+        List<Customer> customers = customerManager.getAllCustomers();
 
-        if (accountCount == 0) {
+        if (customers.isEmpty()) {
             System.out.println("No customers found.");
             return;
         }
@@ -83,49 +86,26 @@ public class CustomerUI {
                 "ID", "Name", "Age", "Contact", "Type", "Accounts");
         System.out.println("─".repeat(80));
 
-        HashSet<String> processedCustomerIds = new HashSet<>();
-        int regularCount = 0;
-        int premiumCount = 0;
+        for (Customer customer : customers) {
+            int accountCount = customerManager.getAccountCountForCustomer(customer.getCustomerId());
 
-        for (int i = 0; i < accountCount; i++) {
-            Customer customer = accounts[i].getCustomer();
-            String customerId = customer.getCustomerId();
-
-            if (processedCustomerIds.contains(customerId)) {
-                continue;
-            }
-
-            // Count accounts for this customer
-            int accountCountForCustomer = 0;
-            for (int j = 0; j < accountCount; j++) {
-                if (accounts[j].getCustomer().getCustomerId().equals(customerId)) {
-                    accountCountForCustomer++;
-                }
-            }
-
-            // Display customer info
             System.out.printf("%-10s %-20s %-10d %-15s %-12s %-15s%n",
-                    customerId,
+                    customer.getCustomerId(),
                     customer.getName(),
                     customer.getAge(),
                     customer.getContact(),
                     customer.getCustomerType(),
-                    accountCountForCustomer + " account(s)");
-
-            processedCustomerIds.add(customerId);
-
-            // Count customer types
-            if (customer.getCustomerType().equals("Regular")) {
-                regularCount++;
-            } else {
-                premiumCount++;
-            }
+                    accountCount + " account(s)");
         }
 
         System.out.println("─".repeat(80));
-        System.out.println("Total Customers: " + processedCustomerIds.size());
-        System.out.println("Regular Customers: " + regularCount);
-        System.out.println("Premium Customers: " + premiumCount);
+
+        // Show statistics
+        CustomerManager.CustomerStatistics stats = customerManager.getCustomerStatistics();
+        System.out.printf("Total Customers: %d | Regular: %d | Premium: %d%n",
+                stats.getTotalCustomers(),
+                stats.getRegularCustomers(),
+                stats.getPremiumCustomers());
     }
 
     private void viewCustomerDetails() {
@@ -140,34 +120,22 @@ public class CustomerUI {
     }
 
     public void viewCustomerDetailsById(String customerId) {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
+        Customer customer = customerManager.getCustomerById(customerId);
 
-        Customer foundCustomer = null;
-        ArrayList<Account> customerAccounts = new ArrayList<>();
-
-        // Find customer and their accounts
-        for (int i = 0; i < accountCount; i++) {
-            Customer customer = accounts[i].getCustomer();
-            if (customer.getCustomerId().equals(customerId)) {
-                if (foundCustomer == null) {
-                    foundCustomer = customer;
-                }
-                customerAccounts.add(accounts[i]);
-            }
-        }
-
-        if (foundCustomer == null) {
+        if (customer == null) {
             System.out.println("Customer not found!");
             return;
         }
+
+        List<Account> customerAccounts = customerManager.getAccountsForCustomer(customerId);
+        double totalBalance = customerManager.getTotalBalanceForCustomer(customerId);
 
         // Display customer details
         System.out.println("\n" + "─".repeat(60));
         System.out.println("CUSTOMER DETAILS");
         System.out.println("─".repeat(60));
 
-        foundCustomer.displayCustomerDetails();
+        customer.displayCustomerDetails();
 
         // Display customer's accounts
         System.out.println("\nCustomer's Accounts:");
@@ -176,14 +144,12 @@ public class CustomerUI {
         if (customerAccounts.isEmpty()) {
             System.out.println("No accounts found for this customer.");
         } else {
-            double totalBalance = 0;
             for (Account account : customerAccounts) {
                 System.out.printf("%s | %s | Balance: $%.2f | Status: %s%n",
                         account.getAccountNumber(),
                         account.getAccountType(),
                         account.getBalance(),
                         account.getStatus());
-                totalBalance += account.getBalance();
             }
             System.out.println("─".repeat(60));
             System.out.printf("Total Accounts: %d | Total Balance: $%.2f%n",
@@ -242,87 +208,65 @@ public class CustomerUI {
     }
 
     private void searchCustomersByName(String customerName) {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
+        List<Customer> results = customerManager.searchCustomersByName(customerName);
 
         System.out.println("\nSearch Results for: " + customerName);
         System.out.println("─".repeat(80));
 
-        HashSet<String> processedCustomerIds = new HashSet<>();
-        boolean found = false;
+        if (results.isEmpty()) {
+            System.out.println("No customers found with name: " + customerName);
+            return;
+        }
 
         System.out.printf("%-10s %-20s %-10s %-15s %-12s%n",
                 "ID", "Name", "Age", "Contact", "Type");
         System.out.println("─".repeat(80));
 
-        for (int i = 0; i < accountCount; i++) {
-            Customer customer = accounts[i].getCustomer();
-            String customerId = customer.getCustomerId();
-
-            if (processedCustomerIds.contains(customerId)) {
-                continue;
-            }
-
-            if (customer.getName().toLowerCase().contains(customerName.toLowerCase())) {
-                System.out.printf("%-10s %-20s %-10d %-15s %-12s%n",
-                        customerId,
-                        customer.getName(),
-                        customer.getAge(),
-                        customer.getContact(),
-                        customer.getCustomerType());
-                processedCustomerIds.add(customerId);
-                found = true;
-            }
+        for (Customer customer : results) {
+            System.out.printf("%-10s %-20s %-10d %-15s %-12s%n",
+                    customer.getCustomerId(),
+                    customer.getName(),
+                    customer.getAge(),
+                    customer.getContact(),
+                    customer.getCustomerType());
         }
 
-        if (!found) {
-            System.out.println("No customers found with name: " + customerName);
-        }
+        System.out.println("─".repeat(80));
+        System.out.println("Found " + results.size() + " customer(s)");
     }
 
     private void searchCustomersByType(String customerType) {
-        Account[] accounts = accountManager.getAccounts();
-        int accountCount = accountManager.getActualAccountCount();
+        List<Customer> customers = customerManager.getCustomersByType(customerType);
 
         System.out.println("\n" + customerType + " Customers:");
         System.out.println("─".repeat(80));
 
-        HashSet<String> processedCustomerIds = new HashSet<>();
-        int count = 0;
+        if (customers.isEmpty()) {
+            System.out.println("No " + customerType.toLowerCase() + " customers found.");
+            return;
+        }
 
         System.out.printf("%-10s %-20s %-10s %-15s %-12s%n",
                 "ID", "Name", "Age", "Contact", "Accounts");
         System.out.println("─".repeat(80));
 
-        for (int i = 0; i < accountCount; i++) {
-            Customer customer = accounts[i].getCustomer();
-            String customerId = customer.getCustomerId();
-
-            if (processedCustomerIds.contains(customerId) ||
-                    !customer.getCustomerType().equals(customerType)) {
-                continue;
-            }
-
-            // Count accounts for this customer
-            int accountCountForCustomer = 0;
-            for (int j = 0; j < accountCount; j++) {
-                if (accounts[j].getCustomer().getCustomerId().equals(customerId)) {
-                    accountCountForCustomer++;
-                }
-            }
+        for (Customer customer : customers) {
+            int accountCount = customerManager.getAccountCountForCustomer(customer.getCustomerId());
 
             System.out.printf("%-10s %-20s %-10d %-15s %-12s%n",
-                    customerId,
+                    customer.getCustomerId(),
                     customer.getName(),
                     customer.getAge(),
                     customer.getContact(),
-                    accountCountForCustomer + " account(s)");
-
-            processedCustomerIds.add(customerId);
-            count++;
+                    accountCount + " account(s)");
         }
 
         System.out.println("─".repeat(80));
-        System.out.println("Total " + customerType + " Customers: " + count);
+        System.out.println("Total " + customerType + " Customers: " + customers.size());
+    }
+
+    private void viewCustomerStatistics() {
+        CustomerManager.CustomerStatistics stats = customerManager.getCustomerStatistics();
+        stats.displayStatistics();
     }
 }
