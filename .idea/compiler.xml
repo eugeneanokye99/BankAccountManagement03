@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="BankAccountManagement" />
         <module name="BankAccountManagementBEM02" />
+        <module name="BankAccountManagement03" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
