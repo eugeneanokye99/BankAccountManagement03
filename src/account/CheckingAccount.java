@@ -1,6 +1,7 @@
 package account;
 
 import customer.Customer;
+import exceptions.OverdraftExceededException;
 import utils.CustomUtils;
 
 public class CheckingAccount extends Account {
@@ -24,27 +25,25 @@ public class CheckingAccount extends Account {
 
     // Override withdraw to allow overdraft up to limit
     @Override
-    public boolean withdraw(double amount) {
+    public boolean withdraw(double amount) throws OverdraftExceededException {
         if (amount <= 0) {
             throw new IllegalArgumentException("Withdrawal amount must be positive");
         }
 
         double maxWithdrawal = getBalance() + overdraftLimit;
+        double newBalance = getBalance() - amount;
 
-        // Check if withdrawal exceeds overdraft limit
-        if (amount > maxWithdrawal) {
-            throw new IllegalArgumentException(
+        // Check if withdrawal exceeds available balance + overdraft limit
+        if (amount > maxWithdrawal && newBalance < 0) {
+            throw new OverdraftExceededException(
                     String.format("Insufficient funds. Exceeds overdraft limit of $%.2f.", overdraftLimit)
             );
         }
 
-        // If valid, perform withdrawal (can go negative up to overdraft limit)
-        double newBalance = getBalance() - amount;
+
         setBalance(newBalance);
 
-        if (newBalance < 0) {
-            CustomUtils.printf("Overdraft used. Negative balance: $%.2f%n", newBalance);
-        }
+
 
         return true;
     }

@@ -7,6 +7,7 @@ import account.Account;
 import account.SavingsAccount;
 import account.CheckingAccount;
 import account.AccountManager;
+import exceptions.OverdraftExceededException;
 import exceptions.ValidationException;
 import transaction.TransactionManager;
 import transaction.Transaction;
@@ -79,45 +80,14 @@ public class Main {
         CustomUtils.printInline("Enter Account Number: ");
         String accountNumber = scanner.nextLine();
 
-        Account account = accountManager.findAccount(accountNumber);
-        if (account == null) {
-            CustomUtils.printError("Account not found!");
-            return;
-        }
+        // Generate the statement
+        String statement = accountManager.generateAccountStatement(accountNumber, transactionManager);
 
-        CustomUtils.print("\n" + "=".repeat(60));
-        CustomUtils.print("ACCOUNT STATEMENT");
-        CustomUtils.print("=".repeat(60));
+        // Display the statement
+        CustomUtils.print(statement);
 
-        // Account Information
-        CustomUtils.print("\nACCOUNT INFORMATION:");
-        CustomUtils.print("Account Number: " + account.getAccountNumber());
-        CustomUtils.print("Account Type: " + account.getAccountType());
-        CustomUtils.print("Customer: " + account.getCustomer().getName());
-        CustomUtils.print("Customer ID: " + account.getCustomer().getCustomerId());
-        CustomUtils.print("Status: " + account.getStatus());
-        CustomUtils.print("Current Balance: $" + String.format("%.2f", account.getBalance()));
-
-        // Account-specific details
-        if (account instanceof SavingsAccount) {
-            SavingsAccount savings = (SavingsAccount) account;
-            CustomUtils.print("Interest Rate: " + savings.getInterestRate() + "%");
-            CustomUtils.print("Minimum Balance: $" + String.format("%.2f", savings.getMinimumBalance()));
-            CustomUtils.print("Interest Earned: $" + String.format("%.2f", savings.calculateInterest()));
-        } else if (account instanceof CheckingAccount) {
-            CheckingAccount checking = (CheckingAccount) account;
-            CustomUtils.print("Overdraft Limit: $" + String.format("%.2f", checking.getOverdraftLimit()));
-            CustomUtils.print("Monthly Fee: $" + String.format("%.2f", checking.getMonthlyFee()));
-            if (account.getCustomer().getCustomerType().equals("Premium")) {
-                CustomUtils.print("Monthly Fee Status: WAIVED");
-            }
-        }
-
-        CustomUtils.print("\n" + "=".repeat(60));
-        CustomUtils.print("Statement Date: " + LocalDate.now());
-        CustomUtils.print("=".repeat(60));
-
-        CustomUtils.printSuccess("Account statement generated successfully!");
+        // Success message (matches screenshot line 15)
+        CustomUtils.printSuccess("✓ Statement generated successfully!");
     }
 
     private static void displayMainMenu() {
@@ -226,7 +196,7 @@ public class Main {
 
             // Get initial deposit with type-specific validation
             double minDeposit = getMinimumDeposit(customerType, accountType);
-            String prompt = String.format("Enter initial deposit amount (minimum $%.2f): $", minDeposit);
+            CustomUtils.printf("Initial deposit amount (minimum $%.2f), ", minDeposit);
 
             double openingBalance = inputService.getPositiveAmount();
 
@@ -247,6 +217,21 @@ public class Main {
             } catch (IllegalArgumentException e) {
                 CustomUtils.printError("Error creating account: " + e.getMessage());
                 return;
+            }
+
+            //add initial deposit transaction
+            try {
+                Transaction initialDepositTransaction = new Transaction(
+                        account.getAccountNumber(),
+                        "DEPOSIT",
+                        openingBalance,
+                        account.getBalance()
+                );
+                transactionManager.addTransaction(initialDepositTransaction);
+
+                CustomUtils.printSuccess("Initial deposit recorded in transaction history!");
+            } catch (Exception e) {
+                CustomUtils.printError("Note: Could not record initial deposit transaction: " + e.getMessage());
             }
 
             if (accountManager.addAccount(account)) {

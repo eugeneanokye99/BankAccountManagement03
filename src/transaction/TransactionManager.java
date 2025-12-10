@@ -2,8 +2,10 @@ package transaction;
 
 import utils.CustomUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 public class TransactionManager {
     private Transaction[] transactions;
@@ -101,7 +103,7 @@ public class TransactionManager {
     
 
     // Helper method to get transactions for a specific account
-    private Transaction[] getTransactionsForAccount(String accountNumber) {
+    public Transaction[] getTransactionsForAccount(String accountNumber) {
         int count = 0;
         for (int i = 0; i < transactionCount; i++) {
             if (transactions[i].getAccountNumber().equals(accountNumber)) {
@@ -118,4 +120,7 @@ public class TransactionManager {
         }
         return result;
     }
+
+
+
 }
