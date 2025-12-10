@@ -3,46 +3,42 @@ package account;
 import transaction.Transaction;
 import transaction.TransactionManager;
 import utils.CustomUtils;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class AccountManager {
-    private Account[] accounts;
-    private int accountCount;
+    private final Map<String, Account> accounts; // Key: accountNumber, Value: Account
+    private final List<Account> accountList; // For maintaining order and easy iteration
 
     public AccountManager() {
-        this.accounts = new Account[50];
-        this.accountCount = 0;
+        this.accounts = new HashMap<>();
+        this.accountList = new ArrayList<>();
     }
 
-    public AccountManager(int capacity) {
-        this.accounts = new Account[capacity];
-        this.accountCount = 0;
+    public AccountManager(int initialCapacity) {
+        this.accounts = new HashMap<>(initialCapacity);
+        this.accountList = new ArrayList<>(initialCapacity);
     }
 
-    // Add account to array
     public boolean addAccount(Account account) {
-        if (accountCount < accounts.length) {
-            accounts[accountCount] = account;
-            accountCount++;
-            return true;
+        String accountNumber = account.getAccountNumber();
+
+        // Check if account already exists
+        if (accounts.containsKey(accountNumber)) {
+            return false;
         }
-        return false; // Array is full
+
+        accounts.put(accountNumber, account);
+        accountList.add(account);
+        return true;
     }
 
-    // Find account by account number
     public Account findAccount(String accountNumber) {
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getAccountNumber().equals(accountNumber)) {
-                return accounts[i];
-            }
-        }
-        return null; // Account not found
+        return accounts.get(accountNumber); // Returns null if not found
     }
 
     // Display all accounts
     public void viewAllAccounts() {
-        if (accountCount == 0) {
+        if (accountList.isEmpty()) {
             CustomUtils.print("No accounts found.");
             return;
         }
@@ -52,29 +48,25 @@ public class AccountManager {
         CustomUtils.print("ACCOUNT LISTING");
         CustomUtils.print("─".repeat(80));
 
-        for (int i = 0; i < accountCount; i++) {
-            Account account = accounts[i];
-
+        // Use accountList to maintain insertion order
+        for (Account account : accountList) {
             account.displayAccountDetails();
-
             CustomUtils.print("─".repeat(80));
             totalBalance += account.getBalance();
         }
 
-        CustomUtils.print("Total Accounts: " + accountCount);
+        CustomUtils.print("Total Accounts: " + accountList.size());
         CustomUtils.print("Total Bank Balance: $" + String.format("%.2f", totalBalance));
-
     }
-
 
     // Search accounts by customer name
     public List<Account> searchByCustomerName(String customerName) {
         List<Account> results = new ArrayList<>();
+        String searchName = customerName.toLowerCase();
 
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getCustomer().getName().toLowerCase()
-                    .contains(customerName.toLowerCase())) {
-                results.add(accounts[i]);
+        for (Account account : accountList) {
+            if (account.getCustomer().getName().toLowerCase().contains(searchName)) {
+                results.add(account);
             }
         }
 
@@ -85,66 +77,30 @@ public class AccountManager {
     public List<Account> searchByAccountType(String accountType) {
         List<Account> results = new ArrayList<>();
 
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getAccountType().equals(accountType)) {
-                results.add(accounts[i]);
+        for (Account account : accountList) {
+            if (account.getAccountType().equals(accountType)) {
+                results.add(account);
             }
         }
 
         return results;
     }
 
-    // Get all savings accounts
-    public List<Account> getSavingsAccounts() {
-        return searchByAccountType("Savings");
-    }
-
-    // Get all checking accounts
-    public List<Account> getCheckingAccounts() {
-        return searchByAccountType("Checking");
-    }
-
-    // Get accounts with balance above threshold
-    public List<Account> getAccountsWithBalanceAbove(double minBalance) {
-        List<Account> results = new ArrayList<>();
-
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getBalance() >= minBalance) {
-                results.add(accounts[i]);
-            }
-        }
-
-        return results;
-    }
-
-    // Get accounts with balance below threshold
-    public List<Account> getAccountsWithBalanceBelow(double maxBalance) {
-        List<Account> results = new ArrayList<>();
-
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getBalance() <= maxBalance) {
-                results.add(accounts[i]);
-            }
-        }
-
-        return results;
-    }
 
     // Get total balance by account type
     public double getTotalBalanceByAccountType(String accountType) {
         double total = 0;
 
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getAccountType().equals(accountType)) {
-                total += accounts[i].getBalance();
+        for (Account account : accountList) {
+            if (account.getAccountType().equals(accountType)) {
+                total += account.getBalance();
             }
         }
 
         return total;
     }
-// Add to AccountManager class
 
-
+    // Generate account statement
     public String generateAccountStatement(String accountNumber, TransactionManager transactionManager) {
         Account account = findAccount(accountNumber);
         if (account == null) {
@@ -184,19 +140,13 @@ public class AccountManager {
         // Line 8: Separator
         statement.append("_______".repeat(1)).append("\n");
 
-        // Get transactions for this account using your existing method
-        Transaction[] accountTransactions = transactionManager.getTransactionsForAccount(accountNumber);
+        // Get transactions for this account
+        List<Transaction> accountTransactions = transactionManager.getTransactionsForAccount(accountNumber);
+        accountTransactions.sort((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()));
 
-        // Sort by timestamp (newest first) - same logic as in viewTransactionsByAccount
-        java.util.Arrays.sort(accountTransactions, new java.util.Comparator<Transaction>() {
-            @Override
-            public int compare(Transaction t1, Transaction t2) {
-                return t2.getTimestamp().compareTo(t1.getTimestamp());
-            }
-        });
 
         // Lines 9-...: Transaction lines
-        if (accountTransactions.length == 0) {
+        if (accountTransactions.isEmpty()) {
             statement.append("No transactions found.\n");
         } else {
             for (Transaction transaction : accountTransactions) {
@@ -242,15 +192,15 @@ public class AccountManager {
         return statement.toString();
     }
 
-
-
-    // Get all accounts (for TransactionManager)
-    public Account[] getAccounts() {
-        return accounts;
+    // Get all accounts as a List (better than array for collections)
+    public List<Account> getAccounts() {
+        return new ArrayList<>(accountList); // Return copy for safety
     }
 
-    // Get account count (for TransactionManager)
+    // Get account count
     public int getActualAccountCount() {
-        return accountCount;
+        return accountList.size();
     }
+
+
 }

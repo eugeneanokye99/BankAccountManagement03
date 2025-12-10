@@ -7,6 +7,9 @@ import customer.Customer;
 import customer.RegularCustomer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AccountManagerTest {
@@ -48,21 +51,6 @@ public class AccountManagerTest {
                 "Account count should be 1 after adding an account");
     }
 
-    @Test
-    void addAccountWhenArrayIsFull() {
-        // Fill up the array (default capacity is 50)
-        AccountManager smallManager = new AccountManager(2);
-
-        boolean firstAdd = smallManager.addAccount(checkingAccount);
-        boolean secondAdd = smallManager.addAccount(savingsAccount);
-        boolean thirdAdd = smallManager.addAccount(new CheckingAccount(customer, 500.0));
-
-        assertTrue(firstAdd, "First account should be added successfully");
-        assertTrue(secondAdd, "Second account should be added successfully");
-        assertFalse(thirdAdd, "Third account should not be added when array is full");
-        assertEquals(2, smallManager.getActualAccountCount(),
-                "Account count should be 2 after trying to add third account to full array");
-    }
 
     @Test
     void addMultipleAccounts() {
@@ -117,16 +105,16 @@ public class AccountManagerTest {
     }
 
     @Test
-    void getAccountsReturnsArray() {
+    void getAccountsReturnsList() {
         accountManager.addAccount(checkingAccount);
         accountManager.addAccount(savingsAccount);
 
-        Account[] accountsArray = accountManager.getAccounts();
+        List<Account> accountsList = accountManager.getAccounts();
 
-        assertNotNull(accountsArray, "Should return non-null array");
-        assertEquals(50, accountsArray.length, "Array should have capacity of 50 (default)");
-        assertSame(checkingAccount, accountsArray[0], "First element should be checking account");
-        assertSame(savingsAccount, accountsArray[1], "Second element should be savings account");
+        assertNotNull(accountsList, "Should return non-null list");
+        assertEquals(2, accountsList.size(), "List should have 2 accounts");
+        assertSame(checkingAccount, accountsList.get(0), "First element should be checking account");
+        assertSame(savingsAccount, accountsList.get(1), "Second element should be savings account");
     }
 
     @Test
@@ -146,20 +134,9 @@ public class AccountManagerTest {
         assertEquals(2, accountManager.getActualAccountCount());
     }
 
-    @Test
-    void getActualAccountCountAfterMaxCapacity() {
-        AccountManager smallManager = new AccountManager(1);
-        smallManager.addAccount(checkingAccount);
-        smallManager.addAccount(savingsAccount); // This won't be added
-
-        assertEquals(1, smallManager.getActualAccountCount(),
-                "Should still be 1 even after trying to add beyond capacity");
-    }
 
     @Test
     void viewAllAccountsWhenEmpty() {
-        // Since viewAllAccounts prints to console, we can't easily assert the output
-        // But we can at least ensure it doesn't throw an exception
         assertDoesNotThrow(() -> accountManager.viewAllAccounts(),
                 "viewAllAccounts should not throw exception when empty");
     }
@@ -212,17 +189,4 @@ public class AccountManagerTest {
         assertNotNull(accountManager.findAccount(anotherSavings.getAccountNumber()));
     }
 
-    @Test
-    void addNullAccount() {
-
-        boolean result = accountManager.addAccount(null);
-
-        assertTrue(result, "Current implementation allows null to be added");
-        assertEquals(1, accountManager.getActualAccountCount());
-
-        // Finding null account by number would cause NullPointerException
-        assertThrows(NullPointerException.class, () -> {
-            accountManager.findAccount("SOMENUMBER");
-        });
-    }
 }

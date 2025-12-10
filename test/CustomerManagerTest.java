@@ -20,9 +20,6 @@ public class CustomerManagerTest {
     private CustomerManager customerManager;
     private Customer regularCustomer;
     private Customer premiumCustomer;
-    private Account checkingAccount1;
-    private Account savingsAccount1;
-    private Account checkingAccount2;
 
     @BeforeEach
     void setUp() {
@@ -32,9 +29,9 @@ public class CustomerManagerTest {
         regularCustomer = new RegularCustomer("John Doe", 30, "0551234567", "Accra");
         premiumCustomer = new PremiumCustomer("Jane Smith", 35, "0557654321", "Kumasi");
 
-        checkingAccount1 = new CheckingAccount(regularCustomer, 1000.0);
-        savingsAccount1 = new SavingsAccount(regularCustomer, 2000.0);
-        checkingAccount2 = new CheckingAccount(premiumCustomer, 5000.0);
+        Account checkingAccount1 = new CheckingAccount(regularCustomer, 1000.0);
+        Account savingsAccount1 = new SavingsAccount(regularCustomer, 2000.0);
+        Account checkingAccount2 = new CheckingAccount(premiumCustomer, 5000.0);
 
         accountManager.addAccount(checkingAccount1);
         accountManager.addAccount(savingsAccount1);
@@ -134,7 +131,7 @@ public class CustomerManagerTest {
         assertEquals(1, lowercaseResults.size());
         assertEquals(1, uppercaseResults.size());
         assertEquals(1, mixedCaseResults.size());
-        assertEquals(regularCustomer.getCustomerId(), lowercaseResults.get(0).getCustomerId());
+        assertEquals(regularCustomer.getCustomerId(), lowercaseResults.getFirst().getCustomerId());
     }
 
     @Test
@@ -145,8 +142,8 @@ public class CustomerManagerTest {
 
         assertEquals(1, regularCustomers.size());
         assertEquals(1, premiumCustomers.size());
-        assertEquals(regularCustomer.getCustomerId(), regularCustomers.get(0).getCustomerId());
-        assertEquals(premiumCustomer.getCustomerId(), premiumCustomers.get(0).getCustomerId());
+        assertEquals(regularCustomer.getCustomerId(), regularCustomers.getFirst().getCustomerId());
+        assertEquals(premiumCustomer.getCustomerId(), premiumCustomers.getFirst().getCustomerId());
     }
 
     @Test
@@ -357,7 +354,6 @@ public class CustomerManagerTest {
         accountManager.addAccount(new CheckingAccount(customer2, 2000.0));
         accountManager.addAccount(new CheckingAccount(customer3, 3000.0));
 
-        List<Customer> alexResults = customerManager.searchCustomersByName("Alex");
         List<Customer> hamResults = customerManager.searchCustomersByName("Ham");
         List<Customer> willResults = customerManager.searchCustomersByName("William");
 

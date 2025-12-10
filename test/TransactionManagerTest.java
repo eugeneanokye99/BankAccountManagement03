@@ -7,6 +7,7 @@ import transaction.TransactionManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.lang.reflect.Field;
+import java.util.List;
 
 public class TransactionManagerTest {
     private Transaction transaction;
@@ -91,46 +92,7 @@ public class TransactionManagerTest {
         assertEquals(2, Transaction.getTransactionCounter());
     }
 
-    // TransactionManager Tests
-    @Test
-    @DisplayName("TransactionManager default constructor creates array with capacity 200")
-    void transactionManagerDefaultConstructor() {
-        assertEquals(0, getTransactionManagerCount(transactionManager));
-    }
 
-    @Test
-    @DisplayName("TransactionManager custom constructor creates array with specified capacity")
-    void transactionManagerCustomConstructor() {
-        TransactionManager customManager = new TransactionManager(50);
-        assertEquals(0, getTransactionManagerCount(customManager));
-    }
-
-    @Test
-    @DisplayName("Add transaction should increase count")
-    void addTransactionIncreasesCount() {
-        transactionManager.addTransaction(transaction);
-        assertEquals(1, getTransactionManagerCount(transactionManager));
-
-        Transaction t2 = new Transaction("ACC002", "WITHDRAWAL", 100.0, 900.0);
-        transactionManager.addTransaction(t2);
-        assertEquals(2, getTransactionManagerCount(transactionManager));
-    }
-
-    @Test
-    @DisplayName("Add transaction should not exceed capacity")
-    void addTransactionWithinCapacity() {
-        TransactionManager smallManager = new TransactionManager(2);
-
-        Transaction t1 = new Transaction("ACC001", "DEPOSIT", 100.0, 1100.0);
-        Transaction t2 = new Transaction("ACC002", "WITHDRAWAL", 50.0, 950.0);
-        Transaction t3 = new Transaction("ACC003", "DEPOSIT", 200.0, 1200.0);
-
-        smallManager.addTransaction(t1);
-        smallManager.addTransaction(t2);
-        smallManager.addTransaction(t3); // Should not be added
-
-        assertEquals(2, getTransactionManagerCount(smallManager));
-    }
 
     @Test
     @DisplayName("Calculate total deposits for account")
@@ -183,7 +145,7 @@ public class TransactionManagerTest {
 
     @Test
     @DisplayName("Get transactions for specific account")
-    void getTransactionsForAccount() throws Exception {
+    void getTransactionsForAccount() {
         Transaction t1 = new Transaction("ACC001", "DEPOSIT", 100.0, 1100.0);
         Transaction t2 = new Transaction("ACC002", "DEPOSIT", 200.0, 1200.0);
         Transaction t3 = new Transaction("ACC001", "WITHDRAWAL", 50.0, 1050.0);
@@ -192,21 +154,19 @@ public class TransactionManagerTest {
         transactionManager.addTransaction(t2);
         transactionManager.addTransaction(t3);
 
-        // Use reflection to test private method
-        var method = TransactionManager.class.getDeclaredMethod("getTransactionsForAccount", String.class);
-        method.setAccessible(true);
-        Transaction[] acc1Transactions = (Transaction[]) method.invoke(transactionManager, "ACC001");
-        Transaction[] acc2Transactions = (Transaction[]) method.invoke(transactionManager, "ACC002");
-        Transaction[] acc3Transactions = (Transaction[]) method.invoke(transactionManager, "ACC003");
+        // Method is now public and returns List<Transaction>
+        List<Transaction> acc1Transactions = transactionManager.getTransactionsForAccount("ACC001");
+        List<Transaction> acc2Transactions = transactionManager.getTransactionsForAccount("ACC002");
+        List<Transaction> acc3Transactions = transactionManager.getTransactionsForAccount("ACC003");
 
-        assertEquals(2, acc1Transactions.length); // t1 and t3
-        assertEquals(1, acc2Transactions.length); // t2
-        assertEquals(0, acc3Transactions.length); // none
+        assertEquals(2, acc1Transactions.size()); // t1 and t3
+        assertEquals(1, acc2Transactions.size()); // t2
+        assertEquals(0, acc3Transactions.size()); // none
     }
 
     @Test
     @DisplayName("Transaction arrays should be sorted by timestamp (newest first)")
-    void transactionsSortedByTimestamp() throws Exception {
+    void transactionsSortedByTimestamp() {
         // Since timestamp is generated at creation, we need to control it
         // We'll test that the sorting comparator works correctly
 
@@ -268,17 +228,6 @@ public class TransactionManagerTest {
         assertEquals(-500.0, negativeTransaction.getBalanceAfter(), 0.001);
     }
 
-    // Helper method to get transaction count from TransactionManager
-    private int getTransactionManagerCount(TransactionManager manager) {
-        try {
-            Field countField = TransactionManager.class.getDeclaredField("transactionCount");
-            countField.setAccessible(true);
-            return (int) countField.get(manager);
-        } catch (Exception e) {
-            fail("Failed to get transaction count: " + e.getMessage());
-            return -1;
-        }
-    }
 
     @Test
     @DisplayName("Case-insensitive transaction type matching")
