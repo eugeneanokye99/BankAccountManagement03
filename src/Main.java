@@ -13,6 +13,7 @@ import transaction.TransactionManager;
 import transaction.Transaction;
 import ui.AccountUI;
 import ui.CustomerUI;
+import utils.ConcurrencyUtils;
 import utils.CustomUtils;
 import utils.InputService;
 import utils.InputValidator;
@@ -53,7 +54,7 @@ public class Main {
                     case 6: generateAccountStatement(); break;
                     case 7: runTest(); break;
                     case 8: saveOrLoadData(); break;
-                    case 9: runConcurrentSimulation(); break;
+                    case 9: ConcurrencyUtils.runAllSimulations();; break;
                     case 10: exitApplication(); break;
                     default: CustomUtils.printError("Invalid choice! Please enter 1-10.");
                 }
@@ -577,8 +578,6 @@ public class Main {
         }
     }
 
-    private static void runConcurrentSimulation() {
-    }
 
     private static void exitApplication() {
         CustomUtils.print();

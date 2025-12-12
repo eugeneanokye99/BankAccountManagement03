@@ -2,23 +2,28 @@ package transaction;
 
 import utils.CustomUtils;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class TransactionManager {
     // Changed from array to ArrayList
-    private List<Transaction> transactions;
+    private final List<Transaction> transactions;
 
     public TransactionManager() {
-        this.transactions = new ArrayList<>(200); // Initial capacity
+        this.transactions = new ArrayList<>(200);
     }
+
 
     public TransactionManager(int initialCapacity) {
         this.transactions = new ArrayList<>(initialCapacity);
     }
 
+
     // Add transaction to ArrayList
     public void addTransaction(Transaction transaction) {
         transactions.add(transaction);
     }
+
+
 
     // View transactions for a specific account (newest first)
     public void viewTransactionsByAccount(String accountNumber) {
@@ -61,133 +66,39 @@ public class TransactionManager {
         CustomUtils.print("Total Transactions: " + accountTransactions.size());
     }
 
+
+
     // Calculate total deposits for an account
     public double calculateTotalDeposits(String accountNumber) {
-        double total = 0;
-        for (Transaction transaction : transactions) {
-            if (transaction.getAccountNumber().equals(accountNumber) &&
-                    transaction.getType().equals("DEPOSIT")) {
-                total += transaction.getAmount();
-            }
-        }
-        return total;
+        return transactions.stream()
+                .filter(t -> t.getAccountNumber().equals(accountNumber))
+                .filter(t -> t.getType().equals("DEPOSIT"))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
     }
 
     // Calculate total withdrawals for an account
     public double calculateTotalWithdrawals(String accountNumber) {
-        double total = 0;
-        for (Transaction transaction : transactions) {
-            if (transaction.getAccountNumber().equals(accountNumber) &&
-                    transaction.getType().equals("WITHDRAWAL")) {
-                total += transaction.getAmount();
-            }
-        }
-        return total;
+        return transactions.stream()
+                .filter(t -> t.getAccountNumber().equals(accountNumber))
+                .filter(t -> t.getType().equals("WITHDRAWAL"))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
     }
 
     // Get transactions for a specific account
     public List<Transaction> getTransactionsForAccount(String accountNumber) {
-        List<Transaction> result = new ArrayList<>();
-
-        for (Transaction transaction : transactions) {
-            if (transaction.getAccountNumber().equals(accountNumber)) {
-                result.add(transaction);
-            }
-        }
-
-        return result;
+        return transactions.stream()
+                .filter(t -> t.getAccountNumber().equals(accountNumber))
+                .collect(Collectors.toList());
     }
 
-    // Get transactions for a specific account as array (for backward compatibility)
-    public Transaction[] getTransactionsForAccountAsArray(String accountNumber) {
-        List<Transaction> list = getTransactionsForAccount(accountNumber);
-        return list.toArray(new Transaction[0]);
-    }
 
     // Get all transactions
     public List<Transaction> getAllTransactions() {
-        return new ArrayList<>(transactions); // Return copy for safety
+        return new ArrayList<>(transactions);
     }
 
-    // Get transaction count
-    public int getTransactionCount() {
-        return transactions.size();
-    }
 
-    // Find transaction by ID
-    public Transaction findTransactionById(String transactionId) {
-        for (Transaction transaction : transactions) {
-            if (transaction.getTransactionId().equals(transactionId)) {
-                return transaction;
-            }
-        }
-        return null;
-    }
 
-    // Get transactions by type
-    public List<Transaction> getTransactionsByType(String type) {
-        List<Transaction> result = new ArrayList<>();
-
-        for (Transaction transaction : transactions) {
-            if (transaction.getType().equals(type)) {
-                result.add(transaction);
-            }
-        }
-
-        return result;
-    }
-
-    // Get transactions within a date range (simplified - would need proper date parsing)
-    public List<Transaction> getTransactionsInDateRange(String startDate, String endDate) {
-        List<Transaction> result = new ArrayList<>();
-
-        // Note: This is a simplified version. In real implementation,
-        // you would parse the dates and compare properly
-        for (Transaction transaction : transactions) {
-            String timestamp = transaction.getTimestamp();
-            // Add date comparison logic here
-            result.add(transaction); // Placeholder
-        }
-
-        return result;
-    }
-
-    // Clear all transactions (useful for testing)
-    public void clearAllTransactions() {
-        transactions.clear();
-    }
-
-    // Get total amount of all transactions
-    public double getTotalTransactionAmount() {
-        double total = 0;
-        for (Transaction transaction : transactions) {
-            total += transaction.getAmount();
-        }
-        return total;
-    }
-
-    // Get unique account numbers that have transactions
-    public Set<String> getAccountsWithTransactions() {
-        Set<String> accountNumbers = new HashSet<>();
-
-        for (Transaction transaction : transactions) {
-            accountNumbers.add(transaction.getAccountNumber());
-        }
-
-        return accountNumbers;
-    }
-
-    // Get latest transaction for an account
-    public Transaction getLatestTransactionForAccount(String accountNumber) {
-        List<Transaction> accountTransactions = getTransactionsForAccount(accountNumber);
-
-        if (accountTransactions.isEmpty()) {
-            return null;
-        }
-
-        // Sort by timestamp (newest first)
-        accountTransactions.sort((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()));
-
-        return accountTransactions.get(0);
-    }
 }
