@@ -4,6 +4,7 @@ import transaction.Transaction;
 import transaction.TransactionManager;
 import utils.CustomUtils;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class AccountManager {
     private final Map<String, Account> accounts; // Key: accountNumber, Value: Account
@@ -43,17 +44,19 @@ public class AccountManager {
             return;
         }
 
-        double totalBalance = 0;
+        double totalBalance = accountList.stream()
+                .mapToDouble(Account::getBalance)
+                .sum();
+
         CustomUtils.print("\n" + "─".repeat(80));
         CustomUtils.print("ACCOUNT LISTING");
         CustomUtils.print("─".repeat(80));
 
-        // Use accountList to maintain insertion order
-        for (Account account : accountList) {
+        // Use forEach for printing
+        accountList.forEach(account -> {
             account.displayAccountDetails();
             CustomUtils.print("─".repeat(80));
-            totalBalance += account.getBalance();
-        }
+        });
 
         CustomUtils.print("Total Accounts: " + accountList.size());
         CustomUtils.print("Total Bank Balance: $" + String.format("%.2f", totalBalance));
@@ -61,43 +64,28 @@ public class AccountManager {
 
     // Search accounts by customer name
     public List<Account> searchByCustomerName(String customerName) {
-        List<Account> results = new ArrayList<>();
         String searchName = customerName.toLowerCase();
 
-        for (Account account : accountList) {
-            if (account.getCustomer().getName().toLowerCase().contains(searchName)) {
-                results.add(account);
-            }
-        }
-
-        return results;
+        return accountList.stream()
+                .filter(account ->
+                        account.getCustomer().getName().toLowerCase().contains(searchName))
+                .collect(Collectors.toList());
     }
 
     // Search accounts by account type
     public List<Account> searchByAccountType(String accountType) {
-        List<Account> results = new ArrayList<>();
-
-        for (Account account : accountList) {
-            if (account.getAccountType().equals(accountType)) {
-                results.add(account);
-            }
-        }
-
-        return results;
+        return accountList.stream()
+                .filter(account -> account.getAccountType().equals(accountType))
+                .collect(Collectors.toList());
     }
 
 
     // Get total balance by account type
     public double getTotalBalanceByAccountType(String accountType) {
-        double total = 0;
-
-        for (Account account : accountList) {
-            if (account.getAccountType().equals(accountType)) {
-                total += account.getBalance();
-            }
-        }
-
-        return total;
+        return accountList.stream()
+                .filter(account -> account.getAccountType().equals(accountType))
+                .mapToDouble(Account::getBalance)
+                .sum();
     }
 
     // Generate account statement
@@ -194,7 +182,7 @@ public class AccountManager {
 
     // Get all accounts as a List (better than array for collections)
     public List<Account> getAccounts() {
-        return new ArrayList<>(accountList); // Return copy for safety
+        return new ArrayList<>(accountList);
     }
 
     // Get account count
