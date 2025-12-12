@@ -1,4 +1,3 @@
-
 import account.AccountManager;
 import account.SavingsAccount;
 import account.CheckingAccount;
@@ -9,175 +8,101 @@ import services.FilePersistenceService;
 import transaction.Transaction;
 import transaction.TransactionManager;
 
+import org.junit.jupiter.api.*;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.nio.file.*;
+import java.util.Comparator;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FilePersistenceServiceTest {
 
-    public static void main(String[] args) {
-        System.out.println("=== Testing FilePersistenceService ===\n");
+    private AccountManager accountManager;
+    private CustomerManager customerManager;
+    private TransactionManager transactionManager;
+    private FilePersistenceService service;
+    private Path testDir;
 
-        try {
-            testSaveAndLoad();
-            testIndividualMethods();
-            testErrorHandling();
+    @BeforeEach
+    public void setUp() throws IOException {
+        accountManager = new AccountManager();
+        customerManager = new CustomerManager(accountManager);
+        transactionManager = new TransactionManager();
+        service = new FilePersistenceService(accountManager, customerManager, transactionManager);
+        testDir = Files.createTempDirectory("bank_test_");
+    }
 
-            System.out.println("\n=== All tests completed successfully ===");
-        } catch (Exception e) {
-            System.err.println("Test failed: " + e.getMessage());
-            e.printStackTrace();
+    @AfterEach
+    public void tearDown() throws IOException {
+        if (Files.exists(testDir)) {
+            Files.walk(testDir)
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(path -> {
+                        try { Files.deleteIfExists(path); } catch (IOException ignored) {}
+                    });
         }
     }
 
-    private static void testSaveAndLoad() throws Exception {
-        System.out.println("1. Testing Save and Load Operations:");
-
-        // Setup test directory
-        Path testDir = Files.createTempDirectory("bank_test_");
-        System.out.println("   Test directory: " + testDir);
-
-        // Create managers with test data
-        AccountManager accountManager = new AccountManager();
-        CustomerManager customerManager = new CustomerManager(accountManager);
-        TransactionManager transactionManager = new TransactionManager();
-
-        // Create test customers
+    @Test
+    @Order(1)
+    public void testSaveAndLoad() throws Exception {
         RegularCustomer regular = new RegularCustomer("Test User", 25, "test@email.com", "Test Address");
         PremiumCustomer premium = new PremiumCustomer("Premium User", 35, "premium@email.com", "Premium Address");
 
-
-
-        // Create test accounts
         SavingsAccount savings = new SavingsAccount(regular, 5000.00);
         CheckingAccount checking = new CheckingAccount(premium, 3000.00);
 
         accountManager.addAccount(savings);
         accountManager.addAccount(checking);
 
-        // Create test transaction
         Transaction transaction = new Transaction(savings.getAccountNumber(), "Deposit", 500.00, 5500.00);
         transactionManager.addTransaction(transaction);
 
-        // Create persistence service
-        FilePersistenceService service = new FilePersistenceService(
-                accountManager, customerManager, transactionManager);
-
-        // Test saveAllData
-        System.out.print("   Testing saveAllData()... ");
+        // Save
         service.saveAllData();
-        System.out.println("PASSED");
 
-        // Test loadAllData (need to clear managers first)
+        // Clear managers
         customerManager.getAllCustomers().clear();
         accountManager.getAccounts().clear();
         transactionManager.getAllTransactions().clear();
 
-        System.out.print("   Testing loadAllData()... ");
+        // Load
         service.loadAllData();
 
-        // Verify loaded data
-        if (customerManager.getAllCustomers().size() == 2 &&
-                accountManager.getAccounts().size() == 2 &&
-                transactionManager.getAllTransactions().size() == 1) {
-            System.out.println("PASSED");
-        } else {
-            throw new AssertionError("Load data mismatch");
-        }
-
-        // Cleanup
-        Files.walk(testDir)
-                .sorted(Comparator.reverseOrder())
-                .forEach(path -> {
-                    try { Files.delete(path); } catch (IOException ignored) {}
-                });
+        assertEquals(2, customerManager.getAllCustomers().size(), "Customers loaded incorrectly");
+        assertEquals(2, accountManager.getAccounts().size(), "Accounts loaded incorrectly");
+        assertEquals(1, transactionManager.getAllTransactions().size(), "Transactions loaded incorrectly");
     }
 
-    private static void testIndividualMethods() throws Exception {
-        System.out.println("\n2. Testing Individual Methods:");
-
-        Path testDir = Files.createTempDirectory("bank_test_");
-
-        AccountManager accountManager = new AccountManager();
-        CustomerManager customerManager = new CustomerManager(accountManager);
-        TransactionManager transactionManager = new TransactionManager();
-
-        FilePersistenceService service = new FilePersistenceService(
-                accountManager, customerManager, transactionManager);
-
-        // Test saveCustomersOnly
+    @Test
+    @Order(2)
+    public void testIndividualMethods() throws Exception {
         RegularCustomer customer = new RegularCustomer("Single User", 40, "single@email.com", "Single Address");
-
-        System.out.print("   Testing saveCustomersOnly()... ");
-        service.saveCustomersOnly();
-
-        Path customersFile = Paths.get("dataset", "customers.txt");
-        if (Files.exists(customersFile)) {
-            System.out.println("PASSED");
-            Files.deleteIfExists(customersFile);
-        } else {
-            throw new AssertionError("Customers file not created");
-        }
-
-        // Test saveAccountsOnly
         SavingsAccount account = new SavingsAccount(customer, 10000.00);
         accountManager.addAccount(account);
 
-        System.out.print("   Testing saveAccountsOnly()... ");
+        // Save individual files
+        service.saveCustomersOnly();
+        Path customersFile = Paths.get("dataset", "customers.txt");
+        assertTrue(Files.exists(customersFile), "Customers file not created");
+        Files.deleteIfExists(customersFile);
+
         service.saveAccountsOnly();
-
         Path accountsFile = Paths.get("dataset", "accounts.txt");
-        if (Files.exists(accountsFile)) {
-            System.out.println("PASSED");
-            Files.deleteIfExists(accountsFile);
-        } else {
-            throw new AssertionError("Accounts file not created");
-        }
+        assertTrue(Files.exists(accountsFile), "Accounts file not created");
+        Files.deleteIfExists(accountsFile);
 
-        // Test dataFilesExist
-        System.out.print("   Testing dataFilesExist()... ");
-        boolean exists = service.dataFilesExist();
-        if (!exists) {
-            System.out.println("PASSED");
-        } else {
-            throw new AssertionError("Should return false when files don't exist");
-        }
-
-        // Cleanup
-        Files.walk(testDir)
-                .sorted(Comparator.reverseOrder())
-                .forEach(path -> {
-                    try { Files.delete(path); } catch (IOException ignored) {}
-                });
+        // dataFilesExist
+        assertFalse(service.dataFilesExist(), "dataFilesExist should return false when files don't exist");
     }
 
-    private static void testErrorHandling() {
-        System.out.println("\n3. Testing Error Handling:");
+    @Test
+    @Order(3)
+    public void testErrorHandling() {
+        assertDoesNotThrow(() -> new FilePersistenceService(null, null, null),
+                "Constructor should handle null managers");
 
-        System.out.print("   Testing with null managers... ");
-        try {
-            new FilePersistenceService(null, null, null);
-            System.out.println("PASSED (constructor handles null)");
-        } catch (Exception e) {
-            System.out.println("FAILED: " + e.getMessage());
-        }
-
-        // Test file operations with invalid paths
-        System.out.print("   Testing invalid file operations... ");
-        AccountManager accountManager = new AccountManager();
-        CustomerManager customerManager = new CustomerManager(accountManager);
-        TransactionManager transactionManager = new TransactionManager();
-
-        new FilePersistenceService(
-                accountManager, customerManager, transactionManager);
-
-        try {
-            // Try to save when directory is read-only (simulate failure)
-            System.out.println("PASSED (exception handling tested)");
-        } catch (Exception e) {
-            System.out.println("Exception handled: " + e.getClass().getSimpleName());
-        }
+        // You can add more specific exception tests if needed
     }
 }

@@ -230,15 +230,10 @@ public class FilePersistenceService {
 
             Account account;
             if (accountType.equals("Savings")) {
-                double interestRate = Double.parseDouble(parts[6]);
-                double minimumBalance = Double.parseDouble(parts[7]);
                 account = new SavingsAccount(customer, balance);
 
             } else {
-                double overdraftLimit = Double.parseDouble(parts[6]);
-                double monthlyFee = Double.parseDouble(parts[7]);
                 account = new CheckingAccount(customer, balance);
-                // Need setters for these fields in CheckingAccount
             }
 
             account.setStatus(status);
@@ -257,7 +252,6 @@ public class FilePersistenceService {
                 return null;
             }
 
-            String customerId = parts[1];
             String name = parts[2];
             int age = Integer.parseInt(parts[3]);
             String contact = parts[4];
@@ -286,7 +280,6 @@ public class FilePersistenceService {
                 return null;
             }
 
-            String transactionId = parts[1];
             String accountNumber = parts[2];
             String type = parts[3];
             double amount = Double.parseDouble(parts[4]);

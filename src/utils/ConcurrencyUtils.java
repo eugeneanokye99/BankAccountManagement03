@@ -5,46 +5,13 @@ import account.CheckingAccount;
 import account.SavingsAccount;
 import customer.Customer;
 import customer.RegularCustomer;
+import services.TransactionTask;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class ConcurrencyUtils {
-
-
-         //Transaction task for concurrent operations using existing Account classes
-
-        private record TransactionTask(Account account, String type, double amount, int threadNumber) implements Runnable {
-
-        @Override
-            public void run() {
-                String accountType = account instanceof SavingsAccount ? "Savings" : "Checking";
-
-                System.out.printf("Thread-%d: %s $%.0f from %s Account %s%n",
-                        threadNumber,
-                        type.equals("DEPOSIT") ? "Depositing" : "Withdrawing",
-                        amount,
-                        accountType,
-                        account.getAccountNumber());
-
-                try {
-                    if (type.equals("DEPOSIT")) {
-                        account.deposit(amount);
-                    } else {
-                        boolean success = account.withdraw(amount);
-                        if (!success) {
-                            System.out.printf("Thread-%d: Withdrawal failed for Account %s (Insufficient funds)%n",
-                                    threadNumber, account.getAccountNumber());
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.printf("Thread-%d: Error in transaction - %s%n",
-                            threadNumber, e.getMessage());
-                }
-            }
-        }
-
-
 
      //Static method to run the simulation programmatically
     public static void runConcurrentSimulation() {
@@ -83,6 +50,8 @@ public class ConcurrencyUtils {
                 savingsAccount.getAccountNumber(),
                 savingsAccount.getBalance());
     }
+
+
 
      // Simulate concurrent transfers between accounts
     public static void runConcurrentTransferSimulation() {
