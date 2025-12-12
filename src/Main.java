@@ -1,14 +1,14 @@
-import java.time.LocalDate;
 import java.util.Scanner;
 import customer.Customer;
+import customer.CustomerManager;
 import customer.RegularCustomer;
 import customer.PremiumCustomer;
 import account.Account;
 import account.SavingsAccount;
 import account.CheckingAccount;
 import account.AccountManager;
-import exceptions.OverdraftExceededException;
 import exceptions.ValidationException;
+import services.FilePersistenceService;
 import transaction.TransactionManager;
 import transaction.Transaction;
 import ui.AccountUI;
@@ -21,12 +21,15 @@ import utils.InputValidator;
 public class Main {
     private static AccountManager accountManager = new AccountManager();
     private static TransactionManager transactionManager = new TransactionManager();
+    private static CustomerManager customerManager = new CustomerManager(accountManager);
     private static Scanner scanner = new Scanner(System.in);
     private static AccountUI accountUI;
     private static CustomerUI customerUI;
     static InputService inputService = new InputService(scanner);
 
     public static void main(String[] args) {
+        loadDataOnStartup();
+
         // Initialize UI components
         accountUI = new AccountUI(accountManager, scanner);
         customerUI = new CustomerUI(accountManager, scanner);
@@ -49,8 +52,10 @@ public class Main {
                     case 5: viewTransactionHistory(); break;
                     case 6: generateAccountStatement(); break;
                     case 7: runTest(); break;
-                    case 8: exitApplication(); break;
-                    default: CustomUtils.printError("Invalid choice! Please enter 1-6.");
+                    case 8: saveOrLoadData(); break;
+                    case 9: runConcurrentSimulation(); break;
+                    case 10: exitApplication(); break;
+                    default: CustomUtils.printError("Invalid choice! Please enter 1-10.");
                 }
             } catch (Exception e) {
                 CustomUtils.printError("Invalid input! Please enter a number.");
@@ -58,36 +63,17 @@ public class Main {
                 choice = 0;
             }
 
-            if (choice != 8) {
+            if (choice != 10) {
                 CustomUtils.printInline("\nPress Enter to continue...");
                 scanner.nextLine();
             }
 
-        } while (choice != 8);
+        } while (choice != 10);
 
         scanner.close();
     }
 
-    private static void runTest() {
-        System.out.println("\nRunning tests...\n");
-        test.AccountTest.runAllTests();
-    }
 
-
-    private static void generateAccountStatement() {
-        CustomUtils.printSection("GENERATE ACCOUNT STATEMENT");
-
-        CustomUtils.printInline("Enter Account Number: ");
-        String accountNumber = scanner.nextLine();
-
-        // Generate the statement
-        String statement = accountManager.generateAccountStatement(accountNumber, transactionManager);
-
-        // Display the statement
-        CustomUtils.print(statement);
-
-        CustomUtils.printSuccess("Statement generated successfully!");
-    }
 
     private static void displayMainMenu() {
         CustomUtils.printHeader("BANK ACCOUNT MANAGEMENT - MAIN MENU");
@@ -98,7 +84,9 @@ public class Main {
         CustomUtils.print("5. View Transaction History");
         CustomUtils.print("6. Generate Account Statements");
         CustomUtils.print("7. Run Tests");
-        CustomUtils.print("8. Exit");
+        CustomUtils.print("8. Save/Load Data");
+        CustomUtils.print("9. Run Concurrent Simulation");
+        CustomUtils.print("10. Exit");
         CustomUtils.print();
     }
 
@@ -519,6 +507,77 @@ public class Main {
         } catch (Exception e) {
             CustomUtils.printError("Error viewing transaction history: " + e.getMessage());
         }
+    }
+
+    private static void runTest() {
+        System.out.println("\nRunning tests...\n");
+        test.AccountTest.runAllTests();
+    }
+
+
+    private static void generateAccountStatement() {
+        CustomUtils.printSection("GENERATE ACCOUNT STATEMENT");
+
+        CustomUtils.printInline("Enter Account Number: ");
+        String accountNumber = scanner.nextLine();
+
+        // Generate the statement
+        String statement = accountManager.generateAccountStatement(accountNumber, transactionManager);
+
+        // Display the statement
+        CustomUtils.print(statement);
+
+        CustomUtils.printSuccess("Statement generated successfully!");
+    }
+
+
+
+    private static void saveOrLoadData() {
+        CustomUtils.printSection("SAVE DATA TO FILES");
+
+        CustomUtils.print("1. Save All Data (Accounts, Customers, Transactions)");
+        CustomUtils.print("2. Save Accounts Only");
+        CustomUtils.print("3. Save Customers Only");
+        CustomUtils.print("4. Save Transactions Only");
+        CustomUtils.print("5. Back to Main Menu");
+
+        int choice = inputService.getIntInRange("Select option (1-5): ", 1, 5);
+
+        FilePersistenceService persistenceService = new FilePersistenceService(
+                accountManager, customerManager, transactionManager);
+
+        switch (choice) {
+            case 1:
+                persistenceService.saveAllData();
+                break;
+            case 2:
+                persistenceService.saveAccountsOnly();
+                break;
+            case 3:
+                persistenceService.saveCustomersOnly();
+                break;
+            case 4:
+                persistenceService.saveTransactionsOnly();
+                break;
+            case 5:
+                return;
+        }
+    }
+
+    private static void loadDataOnStartup() {
+        FilePersistenceService persistenceService = new FilePersistenceService(
+                accountManager, customerManager, transactionManager);
+
+        if (persistenceService.anyDataFileExists()) {
+            CustomUtils.printSection("LOADING SAVED DATA");
+            persistenceService.loadAllData();
+        } else {
+            CustomUtils.printSection("NO SAVED DATA FOUND");
+            CustomUtils.print("Starting with empty dataset.");
+        }
+    }
+
+    private static void runConcurrentSimulation() {
     }
 
     private static void exitApplication() {
